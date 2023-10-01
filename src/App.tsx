@@ -1,6 +1,12 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import { css } from "@emotion/css";
+
+const style = css`
+  color: hotpink;
+  margin-top: 1rem;
+`;
 
 function App() {
   return (
@@ -18,6 +24,8 @@ function App() {
         >
           Learn React
         </a>
+
+        <div className={style}>Hello World with React + Emotion</div>
       </header>
     </div>
   );
