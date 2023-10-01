@@ -1,34 +1,14 @@
 import React from "react";
-import logo from "./logo.svg";
-import "./App.css";
 import { css } from "@emotion/css";
 
 const style = css`
   color: hotpink;
-  margin-top: 1rem;
+  border: 1px solid pink;
+  padding: 2rem;
 `;
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-
-        <div className={style}>Hello World with React + Emotion</div>
-      </header>
-    </div>
-  );
+  return <div className={style}>Hello World with React + Emotion</div>;
 }
 
 export default App;
