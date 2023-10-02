@@ -6,7 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 
 const client = new ApolloClient({
-  uri: "https://web-tools.tokopedia.com/postgres/v1/graphql",
+  uri: "https://wpe-hiring.tokopedia.net/graphql",
   cache: new InMemoryCache(),
 });
 

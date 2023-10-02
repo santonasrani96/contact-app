@@ -25,7 +25,7 @@ type PropType = {
   children?: React.ReactNode;
 };
 
-const Header: FC<any> = (props: PropType) => {
+const Header: FC<PropType> = (props: PropType) => {
   return (
     <div>
       <div className={headerPage}>

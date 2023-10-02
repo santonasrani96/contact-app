@@ -7,123 +7,61 @@ import CardContent from "@mui/material/CardContent";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
+import { useQuery, gql } from "@apollo/client";
+
+const GET_CONTACTS = gql`
+  query GetContactList($limit: Int, $offset: Int) {
+    contact(limit: $limit, offset: $offset) {
+      created_at
+      first_name
+      id
+      last_name
+      phones {
+        number
+      }
+    }
+  }
+`;
 
 const box = css`
   width: 100%;
 `;
 
-const contacts = [
-  {
-    created_at: "2023-10-01T16:52:35.836793+00:00",
-    first_name: "wadad",
-    id: 27896,
-    last_name: "dadawda",
-    phones: [
-      {
-        number: "22323213",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:08:51.956+00:00",
-    first_name: "1",
-    id: 27934,
-    last_name: "1",
-    phones: [
-      {
-        number: "1",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:17:30.582521+00:00",
-    first_name: "nio",
-    id: 27935,
-    last_name: "sanrio",
-    phones: [
-      {
-        number: "08516181318",
-      },
-      {
-        number: "2181846448",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:20:56.298947+00:00",
-    first_name: "ed",
-    id: 27936,
-    last_name: "dee",
-    phones: [
-      {
-        number: "82618121",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:30:28.256764+00:00",
-    first_name: "test",
-    id: 27940,
-    last_name: "tes",
-    phones: [
-      {
-        number: "08129182918",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:36:37.207354+00:00",
-    first_name: "ded",
-    id: 27942,
-    last_name: "ded",
-    phones: [
-      {
-        number: "000",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:37:50.642697+00:00",
-    first_name: "dwda",
-    id: 27945,
-    last_name: "dadd",
-    phones: [],
-  },
-  {
-    created_at: "2023-10-02T01:41:27.323284+00:00",
-    first_name: "t",
-    id: 27948,
-    last_name: "t",
-    phones: [],
-  },
-  {
-    created_at: "2023-10-02T01:44:49.671317+00:00",
-    first_name: "weqewq",
-    id: 27951,
-    last_name: "ddd",
-    phones: [
-      {
-        number: "23213",
-      },
-    ],
-  },
-  {
-    created_at: "2023-10-02T01:49:25.622956+00:00",
-    first_name: "t",
-    id: 27955,
-    last_name: "t",
-    phones: [
-      {
-        number: "08212874837",
-      },
-      {
-        number: "082128748376",
-      },
-    ],
-  },
-];
+const PaginationStyle = css`
+  display: flex;
+  align-items: center;
+  margin: 5rem auto;
+`;
+
+type PhoneItem = {
+  number: string;
+};
+
+type ContactItem = {
+  created_at: string;
+  first_name: string;
+  id: number;
+  last_name: string;
+  phones: Array<PhoneItem>;
+  phone: PhoneItem;
+};
 
 const Contact: FC = () => {
+  const [page, setPage] = React.useState(1);
+  const { loading, error, data, refetch } = useQuery(GET_CONTACTS, {
+    variables: { limit: 10, offset: page - 1 },
+  });
+
+  const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+    refetch();
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error : {error.message}</p>;
+
   return (
     <div className={box}>
       <Header title="Contact" />
@@ -133,27 +71,33 @@ const Contact: FC = () => {
           spacing={{ xs: 2, md: 3 }}
           columns={{ xs: 4, sm: 12, md: 12 }}
         >
-          {contacts.map((contact, index) => (
+          {data.contact.map((item: ContactItem, index: number) => (
             <Grid item xs={2} sm={4} md={3} key={index}>
-              <Card sx={{ minWidth: 150 }}>
+              <Card
+                sx={{
+                  minWidth: 150,
+                }}
+              >
                 <CardContent>
                   <Typography
                     sx={{ fontSize: 14 }}
                     color="text.secondary"
                     gutterBottom
                   >
-                    Word of the Day
+                    Kontak No. {index + 1}
                   </Typography>
                   <Typography variant="h5" component="div">
-                    {contact.first_name}
+                    {item.first_name} {item.last_name} {item.id}
                   </Typography>
                   <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                    adjective
+                    Nomor Telepon:
                   </Typography>
                   <Typography variant="body2">
-                    well meaning and kindly.
-                    <br />
-                    {'"a benevolent smile"'}
+                    {item.phones.map((phone: PhoneItem, idx: number) => (
+                      <div>
+                        #{idx + 1}. {phone.number}
+                      </div>
+                    ))}
                   </Typography>
                 </CardContent>
                 <CardActions>
@@ -163,6 +107,17 @@ const Contact: FC = () => {
             </Grid>
           ))}
         </Grid>
+
+        {/* pagination */}
+        <Stack spacing={2} className={PaginationStyle}>
+          <Pagination
+            count={10}
+            page={page}
+            variant="outlined"
+            shape="rounded"
+            onChange={handleChange}
+          />
+        </Stack>
       </>
     </div>
   );
