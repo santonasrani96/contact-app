@@ -1,14 +1,29 @@
 import React from "react";
-import { css } from "@emotion/css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Contact from "./pages/Contact";
+import Home from "./pages/Home";
+import styled from "@emotion/styled";
+import Navbar from "./components/Navbar";
 
-const style = css`
-  color: hotpink;
-  border: 1px solid pink;
-  padding: 2rem;
-`;
+const ContainerStyled = styled.div({
+  display: "flex",
+  margin: "1rem 7%",
+});
 
 function App() {
-  return <div className={style}>Hello World with React + Emotion</div>;
+  return (
+    <div>
+      <Router>
+        <Navbar />
+        <ContainerStyled>
+          <Routes>
+            <Route path="/" element={<Home />}></Route>
+            <Route path="/contact" element={<Contact />}></Route>
+          </Routes>
+        </ContainerStyled>
+      </Router>
+    </div>
+  );
 }
 
 export default App;
