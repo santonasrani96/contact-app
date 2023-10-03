@@ -167,7 +167,7 @@ const Contact: FC = () => {
               <Card
                 sx={{
                   height: "100%",
-                  margin: "1rem",
+                  margin: "1rem 1rem 1rem 0",
                 }}
               >
                 <CardContent>
