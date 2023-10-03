@@ -1,15 +1,19 @@
 import React, { FC } from "react";
 import Header from "../components/Header";
 import { css } from "@emotion/css";
+import styled from "@emotion/styled";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { useQuery, gql } from "@apollo/client";
+
+import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FormDialog from "../components/FormDialog";
 
 const GET_CONTACTS = gql`
   query GetContactList($limit: Int, $offset: Int) {
@@ -29,6 +33,12 @@ const box = css`
   width: 100%;
 `;
 
+const CardHeader = styled.div({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+});
+
 const PaginationStyle = css`
   display: flex;
   align-items: center;
@@ -45,11 +55,21 @@ type ContactItem = {
   id: number;
   last_name: string;
   phones: Array<PhoneItem>;
-  phone: PhoneItem;
 };
 
 const Contact: FC = () => {
+  const initialObjectContactItem: ContactItem = {
+    created_at: "",
+    first_name: "",
+    id: 0,
+    last_name: "",
+    phones: [],
+  };
   const [page, setPage] = React.useState(1);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
+    initialObjectContactItem
+  );
   const { loading, error, data, refetch } = useQuery(GET_CONTACTS, {
     variables: { limit: 10, offset: page - 1 },
   });
@@ -59,12 +79,42 @@ const Contact: FC = () => {
     refetch();
   };
 
-  if (loading) return <p>Loading...</p>;
+  const handleEdit = (item: ContactItem) => {
+    setSelectedItem(item);
+    handleOpenDialog();
+    // alert("di edit");
+  };
+
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleDelete = (item: ContactItem) => {
+    console.log(item);
+    alert("di delete");
+  };
+
+  if (loading) return <p>Loading Contact...</p>;
   if (error) return <p>Error : {error.message}</p>;
 
   return (
     <div className={box}>
       <Header title="Contact" />
+      {isDialogOpen ? "true" : "false"}
+      {!isDialogOpen ? (
+        ""
+      ) : (
+        <FormDialog
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          mode="edit"
+          item={selectedItem}
+        />
+      )}
       <>
         <Grid
           container
@@ -79,13 +129,36 @@ const Contact: FC = () => {
                 }}
               >
                 <CardContent>
-                  <Typography
-                    sx={{ fontSize: 14 }}
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Kontak No. {index + 1}
-                  </Typography>
+                  <CardHeader>
+                    <div>
+                      <Typography
+                        sx={{ fontSize: 14 }}
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Kontak No. {index + 1}
+                      </Typography>
+                    </div>
+                    <div>
+                      <Stack direction="row">
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <EditIcon fontSize="inherit" />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => handleDelete(item)}
+                        >
+                          <DeleteIcon fontSize="inherit" />
+                        </IconButton>
+                      </Stack>
+                    </div>
+                  </CardHeader>
+
                   <Typography variant="h5" component="div">
                     {item.first_name} {item.last_name} {item.id}
                   </Typography>
@@ -100,9 +173,6 @@ const Contact: FC = () => {
                     ))}
                   </Typography>
                 </CardContent>
-                <CardActions>
-                  <Button size="small">Learn More</Button>
-                </CardActions>
               </Card>
             </Grid>
           ))}
