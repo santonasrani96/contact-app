@@ -8,11 +8,13 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import FormDialog from "../components/FormDialog";
 
 const GET_CONTACTS = gql`
@@ -25,6 +27,16 @@ const GET_CONTACTS = gql`
       phones {
         number
       }
+    }
+  }
+`;
+
+const DELETE_CONTACT = gql`
+  mutation MyMutation($id: Int!) {
+    delete_contact_by_pk(id: $id) {
+      first_name
+      last_name
+      id
     }
   }
 `;
@@ -74,6 +86,8 @@ const Contact: FC = () => {
     variables: { limit: 10, offset: page - 1 },
   });
 
+  const [deleteContact] = useMutation(DELETE_CONTACT);
+
   const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
     refetch();
@@ -82,7 +96,6 @@ const Contact: FC = () => {
   const handleEdit = (item: ContactItem) => {
     setSelectedItem(item);
     handleOpenDialog();
-    // alert("di edit");
   };
 
   const handleOpenDialog = () => {
@@ -96,6 +109,35 @@ const Contact: FC = () => {
   const handleDelete = (item: ContactItem) => {
     console.log(item);
     alert("di delete");
+  };
+
+  const handleFavorite = (item: ContactItem) => {
+    const getFavorite = localStorage.getItem("favorites");
+    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
+    favorites.push(item);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+
+    // delete favorite contact from regular list
+    // handleDeleteContact(item);
+  };
+
+  const handleDeleteContact = (item: ContactItem) => {
+    deleteContact({ variables: { id: item.id } });
+  };
+
+  const checkContactIsFavorite = (contact: ContactItem) => {
+    const getFavorite = localStorage.getItem("favorites");
+    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
+    let favorite = null;
+    if (favorites.length > 0) {
+      favorite = favorites.find((fav: ContactItem) => fav.id === contact.id);
+    }
+
+    if (favorite) {
+      return <FavoriteIcon fontSize="inherit" />;
+    } else {
+      return <FavoriteBorderIcon fontSize="inherit" />;
+    }
   };
 
   if (loading) return <p>Loading Contact...</p>;
@@ -124,7 +166,8 @@ const Contact: FC = () => {
             <Grid item xs={2} sm={4} md={3} key={index}>
               <Card
                 sx={{
-                  minWidth: 150,
+                  height: "100%",
+                  margin: "1rem",
                 }}
               >
                 <CardContent>
@@ -140,6 +183,13 @@ const Contact: FC = () => {
                     </div>
                     <div>
                       <Stack direction="row">
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => handleFavorite(item)}
+                        >
+                          <>{checkContactIsFavorite(item)}</>
+                        </IconButton>
                         <IconButton
                           color="primary"
                           size="small"
@@ -159,7 +209,7 @@ const Contact: FC = () => {
                   </CardHeader>
 
                   <Typography variant="h5" component="div">
-                    {item.first_name} {item.last_name} {item.id}
+                    {item.first_name} {item.last_name}
                   </Typography>
                   <Typography sx={{ mb: 1.5 }} color="text.secondary">
                     Nomor Telepon:
