@@ -16,10 +16,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FormDialog from "../components/FormDialog";
+import Tooltip from "@mui/material/Tooltip";
+
+import TextField from "@mui/material/TextField";
 
 const GET_CONTACTS = gql`
-  query GetContactList($limit: Int, $offset: Int) {
-    contact(limit: $limit, offset: $offset) {
+  query GetContactList($limit: Int, $offset: Int, $where: contact_bool_exp) {
+    contact(limit: $limit, offset: $offset, where: $where) {
       created_at
       first_name
       id
@@ -43,6 +46,11 @@ const DELETE_CONTACT = gql`
 
 const box = css`
   width: 100%;
+`;
+
+const searchInput = css`
+  display: flex;
+  justify-content: end;
 `;
 
 const CardHeader = styled.div({
@@ -82,8 +90,22 @@ const Contact: FC = () => {
   const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
     initialObjectContactItem
   );
+  const [search, setSearch] = React.useState<string>("");
+  const [searchFirstName, setSearchFirstName] = React.useState<string>("");
+  const [searchLastName, setSearchLastName] = React.useState<string>("");
   const { loading, error, data, refetch } = useQuery(GET_CONTACTS, {
-    variables: { limit: 10, offset: page - 1 },
+    variables: {
+      limit: 10,
+      offset: page - 1,
+      where: {
+        first_name: {
+          _like: searchFirstName ? searchFirstName : "%%",
+        },
+        last_name: {
+          _like: searchLastName ? searchLastName : "%%",
+        },
+      },
+    },
   });
 
   const [deleteContact] = useMutation(DELETE_CONTACT);
@@ -124,6 +146,25 @@ const Contact: FC = () => {
     deleteContact({ variables: { id: item.id } });
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const value: string[] = search.split(" ");
+      if (value.length > 0) {
+        if (value.length === 1) {
+          setSearchFirstName(`%${value[0]}%`);
+        } else {
+          setSearchFirstName(`%${value[0]}%`);
+          setSearchLastName(`%${value[1]}%`);
+        }
+      } else {
+        setSearchFirstName("%%");
+        setSearchLastName("%%");
+      }
+
+      refetch();
+    }
+  };
+
   const checkContactIsFavorite = (contact: ContactItem) => {
     const getFavorite = localStorage.getItem("favorites");
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
@@ -145,6 +186,19 @@ const Contact: FC = () => {
   return (
     <div className={box}>
       <Header title="Contact" />
+      <div className={searchInput}>
+        <Tooltip title="Hit 'Enter' to search">
+          <TextField
+            id="input-with-sx"
+            label="Search Contact..."
+            variant="outlined"
+            value={search}
+            onKeyPress={handleKeyPress}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: "300px", marginRight: "1rem" }}
+          />
+        </Tooltip>
+      </div>
       {!isDialogOpen ? (
         ""
       ) : (
