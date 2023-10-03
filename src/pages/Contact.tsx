@@ -231,7 +231,7 @@ const Contact: FC = () => {
                         color="text.secondary"
                         gutterBottom
                       >
-                        Kontak No. {index + 1}
+                        Contact ID {item.id}
                       </Typography>
                     </div>
                     <div>
@@ -265,7 +265,7 @@ const Contact: FC = () => {
                     {item.first_name} {item.last_name}
                   </Typography>
                   <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                    Nomor Telepon:
+                    Phone Number:
                   </Typography>
                   <Typography variant="body2">
                     {item.phones.map((phone: PhoneItem, idx: number) => (

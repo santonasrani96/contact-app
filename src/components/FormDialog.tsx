@@ -16,7 +16,42 @@ import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
 
 import { css } from "@emotion/css";
-import { useQuery, gql, concat } from "@apollo/client";
+import { useQuery, gql, useMutation } from "@apollo/client";
+
+const EDIT_CONTACT = gql`
+  mutation EditContactById($id: Int!, $_set: contact_set_input) {
+    update_contact_by_pk(pk_columns: { id: $id }, _set: $_set) {
+      id
+      first_name
+      last_name
+      phones {
+        number
+      }
+    }
+  }
+`;
+
+const EDIT_PHONE_NUMBER = gql`
+  mutation EditPhoneNumber(
+    $pk_columns: phone_pk_columns_input!
+    $new_phone_number: String!
+  ) {
+    update_phone_by_pk(
+      pk_columns: $pk_columns
+      _set: { number: $new_phone_number }
+    ) {
+      contact {
+        id
+        last_name
+        first_name
+        created_at
+        phones {
+          number
+        }
+      }
+    }
+  }
+`;
 
 const GET_CONTACT_BY_ID = gql`
   query GetContactDetail($id: Int!) {
@@ -71,11 +106,18 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
   const { loading, error, data } = useQuery(GET_CONTACT_BY_ID, {
     variables: { id: props.item.id },
   });
+  const [editContact] = useMutation(EDIT_CONTACT);
+  const [editPhoneNumber] = useMutation(EDIT_PHONE_NUMBER);
 
   const [firstName, setFirstName] = React.useState<string>("");
   const [lastName, setLastName] = React.useState<string>("");
   const [numbers, setNumbers] = React.useState<FormPhoneNumber[]>([]);
   const [phone, setPhone] = React.useState<PhoneNumber[]>([]);
+  const [oldNumber, setOldNumber] = React.useState<PhoneNumber[]>(
+    props.item.phones
+  );
+
+  const [dialogTitle, setDialogTitle] = React.useState<string>("");
 
   React.useEffect(() => {
     setNumbers([]);
@@ -95,44 +137,18 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
         ]);
       });
     }
-  }, [data]);
+
+    if (props.mode === "edit") {
+      console.log("ts");
+      setDialogTitle("Edit Contact");
+    } else {
+      setDialogTitle("Add New Contact");
+    }
+  }, [data, props.mode]);
 
   const handleClose = () => {
     setOpen(false);
     props.onClose();
-  };
-  const setDialogTitle = () => {
-    console.log("ts");
-    if (props.mode === "edit") {
-      return "Edit Contact";
-    } else {
-      return "Add New Contact";
-    }
-  };
-
-  const increasePhoneNumber = () => {
-    const currentId: number = numbers.length;
-    const idAdded: number = currentId + 1;
-
-    const data: FormPhoneNumber = {
-      id: idAdded,
-      number: "",
-    };
-
-    setNumbers((oldVal) => [...oldVal, data]);
-  };
-
-  const decreasePhoneNumber = (dataNumber: FormPhoneNumber) => {
-    if (numbers.length <= 0) {
-      return;
-    }
-
-    const newNumber = [
-      ...numbers.slice(0, dataNumber.id),
-      ...numbers.slice(dataNumber.id + 1),
-    ];
-    setNumbers([]);
-    setNumbers(newNumber);
   };
 
   const handleSetInput = (value: string, index: number) => {
@@ -162,7 +178,36 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
       return;
     }
 
+    setEditContact();
+    setEditPhoneNumber();
+
     alert("disimpan");
+  };
+
+  const setEditPhoneNumber = () => {
+    oldNumber.forEach((old: PhoneNumber, index: number) => {
+      editPhoneNumber({
+        variables: {
+          pk_columns: {
+            number: old.number,
+            contact_id: props.item.id,
+          },
+          new_phone_number: phone[index].number,
+        },
+      });
+    });
+  };
+
+  const setEditContact = () => {
+    editContact({
+      variables: {
+        id: props.item.id,
+        _set: {
+          first_name: firstName,
+          last_name: lastName,
+        },
+      },
+    });
   };
 
   React.useEffect(() => {
@@ -191,7 +236,7 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle id="alert-dialog-title">{setDialogTitle()}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{dialogTitle}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <Grid container rowSpacing={3}>
@@ -204,6 +249,7 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
                       fullWidth
                       variant="outlined"
                       value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={6}>
@@ -213,6 +259,7 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
                       fullWidth
                       variant="outlined"
                       value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                     />
                   </Grid>
                 </Grid>
@@ -220,27 +267,11 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
               <Grid item xs={12}>
                 <div className={formLabel}>
                   <div>Phone Number</div>
-                  <div>
-                    <IconButton color="primary" onClick={increasePhoneNumber}>
-                      <AddIcon />
-                    </IconButton>
-                  </div>
                 </div>
-                {/* <TextField id="outlined-basic" fullWidth variant="outlined" /> */}
                 {numbers.map((item, index) => (
                   <>
-                    {item.id === 1 ? (
-                      ""
-                    ) : (
-                      <IconButton
-                        key={index}
-                        color="primary"
-                        onClick={() => decreasePhoneNumber(item)}
-                      >
-                        <RemoveIcon /> {item.id}
-                      </IconButton>
-                    )}
                     <TextField
+                      sx={index === 0 ? {} : { marginTop: "1rem" }}
                       key={index}
                       id="outlined-basic"
                       fullWidth
@@ -248,7 +279,6 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
                       placeholder={`Phone Number ${item.id}`}
                       value={numbers[index].number}
                       onChange={(e) => handleSetInput(e.target.value, index)}
-                      // onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </>
                 ))}
