@@ -75,7 +75,7 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
   const [firstName, setFirstName] = React.useState<string>("");
   const [lastName, setLastName] = React.useState<string>("");
   const [numbers, setNumbers] = React.useState<FormPhoneNumber[]>([]);
-  //   const [nextId, setNextId] = React.useState(0);
+  const [phone, setPhone] = React.useState<PhoneNumber[]>([]);
 
   React.useEffect(() => {
     setNumbers([]);
@@ -139,6 +139,47 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
     const inputNumber = [...numbers];
     inputNumber[index].number = value;
     setNumbers(inputNumber);
+  };
+
+  const handleSubmit = () => {
+    const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
+    const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
+
+    if (isFirstNameInvalid && !isLastNameInvalid) {
+      alert("First Name does not allow to use special characters");
+      return;
+    }
+
+    if (!isFirstNameInvalid && isLastNameInvalid) {
+      alert("Last Name does not allow to use special characters");
+      return;
+    }
+
+    if (isFirstNameInvalid && isLastNameInvalid) {
+      alert(
+        "First Name and Last Name does not allow to use special characters"
+      );
+      return;
+    }
+
+    alert("disimpan");
+  };
+
+  React.useEffect(() => {
+    const phoneValues = numbers.map((item) => ({
+      number: item.number,
+    }));
+
+    setPhone(phoneValues);
+  }, [numbers]);
+
+  const containsSpecialCharacters = (value: string) => {
+    const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+    if (value.match(specialCharacters)) {
+      return true;
+    } else {
+      return false;
+    }
   };
   return (
     <>
@@ -217,7 +258,7 @@ const FormDialog: React.FC<FormDialogProps> = (props: FormDialogProps) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button autoFocus variant="contained">
+          <Button onClick={handleSubmit} autoFocus variant="contained">
             Save
           </Button>
         </DialogActions>

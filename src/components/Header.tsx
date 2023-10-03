@@ -83,12 +83,6 @@ type PhoneNumber = {
   number: string;
 };
 
-type SaveParams = {
-  first_name: string;
-  last_name: string;
-  phones: Array<PhoneNumber>;
-};
-
 const Header: FC<PropType> = (props: PropType) => {
   const [open, setOpen] = React.useState(false);
   const [nextId, setNextId] = React.useState(0);
@@ -97,7 +91,6 @@ const Header: FC<PropType> = (props: PropType) => {
   const [firstName, setFirstName] = React.useState<string>("");
   const [lastName, setLastName] = React.useState<string>("");
   const [phone, setPhone] = React.useState<PhoneNumber[]>([]);
-  // const [phone, setPhone] = React.useState<Array<PhoneNumber[]>>([]);
 
   const [createContact, { loading, error, data }] = useMutation(
     ADD_CONTACT_WITH_PHONES,
@@ -172,11 +165,15 @@ const Header: FC<PropType> = (props: PropType) => {
       return;
     }
 
+    createContact();
+  };
+
+  React.useEffect(() => {
     const phoneValues: Array<PhoneNumber> = [];
 
-    // phoneValues.push({
-    //   number: phoneNumber,
-    // });
+    phoneValues.push({
+      number: phoneNumber,
+    });
 
     numbers.forEach((item) => {
       phoneValues.push({
@@ -184,12 +181,12 @@ const Header: FC<PropType> = (props: PropType) => {
       });
     });
 
-    // setPhone((oldPhone) => [...oldPhone, phoneValues]);
-    setPhone((oldPhone) => [...oldPhone, { number: "917234234" }]);
-    setPhone([...phone, { number: "917234234" }]);
-    createContact();
-    alert("disimpan");
-  };
+    setPhone(
+      phoneValues.map((item) => ({
+        number: item.number,
+      }))
+    );
+  }, [numbers, phoneNumber]);
 
   const containsSpecialCharacters = (value: string) => {
     const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;

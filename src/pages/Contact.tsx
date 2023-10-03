@@ -104,7 +104,6 @@ const Contact: FC = () => {
   return (
     <div className={box}>
       <Header title="Contact" />
-      {isDialogOpen ? "true" : "false"}
       {!isDialogOpen ? (
         ""
       ) : (
