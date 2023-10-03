@@ -11,9 +11,20 @@ import styled from "@emotion/styled";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FormDialog from "../components/FormDialog";
+
+import { useMutation, gql } from "@apollo/client";
+
+const DELETE_CONTACT = gql`
+  mutation MyMutation($id: Int!) {
+    delete_contact_by_pk(id: $id) {
+      first_name
+      last_name
+      id
+    }
+  }
+`;
 
 const CardHeader = styled.div({
   display: "flex",
@@ -59,6 +70,8 @@ const Home: FC = () => {
     phones: [],
   };
 
+  const [deleteContact] = useMutation(DELETE_CONTACT);
+
   const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
     initialObjectContactItem
   );
@@ -91,6 +104,14 @@ const Home: FC = () => {
     // handleDeleteContact(item);
   };
 
+  const handleDelete = (item: ContactItem) => {
+    handleDeleteContact(item);
+  };
+
+  const handleDeleteContact = (item: ContactItem) => {
+    deleteContact({ variables: { id: item.id } });
+  };
+
   const handleEdit = (item: ContactItem) => {
     setSelectedItem(item);
     handleOpenDialog();
@@ -102,11 +123,6 @@ const Home: FC = () => {
 
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
-  };
-
-  const handleDelete = (item: ContactItem) => {
-    console.log(item);
-    alert("di delete");
   };
 
   const setCardHTML = () => {

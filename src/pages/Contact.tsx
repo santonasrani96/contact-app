@@ -106,11 +106,6 @@ const Contact: FC = () => {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (item: ContactItem) => {
-    console.log(item);
-    alert("di delete");
-  };
-
   const handleFavorite = (item: ContactItem) => {
     const getFavorite = localStorage.getItem("favorites");
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
@@ -119,6 +114,10 @@ const Contact: FC = () => {
 
     // delete favorite contact from regular list
     // handleDeleteContact(item);
+  };
+
+  const handleDelete = (item: ContactItem) => {
+    handleDeleteContact(item);
   };
 
   const handleDeleteContact = (item: ContactItem) => {
