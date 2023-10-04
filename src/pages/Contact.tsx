@@ -1,48 +1,23 @@
 import React, { FC } from "react";
-import Header from "../components/Header";
+
+// Emotion
 import { css } from "@emotion/css";
-import styled from "@emotion/styled";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Pagination from "@mui/material/Pagination";
+
+// React MaterialUI Components
 import Stack from "@mui/material/Stack";
-import { useQuery, useMutation, gql } from "@apollo/client";
-
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FormDialog from "../components/FormDialog";
+import Pagination from "@mui/material/Pagination";
+import Grid from "@mui/material/Grid";
 import Tooltip from "@mui/material/Tooltip";
-
 import TextField from "@mui/material/TextField";
 
-const GET_CONTACTS = gql`
-  query GetContactList($limit: Int, $offset: Int, $where: contact_bool_exp) {
-    contact(limit: $limit, offset: $offset, where: $where) {
-      created_at
-      first_name
-      id
-      last_name
-      phones {
-        number
-      }
-    }
-  }
-`;
+// grapQL query hooks
+import useDeleteContact from "../hooks/useDeleteContact";
+import useGetContacts from "../hooks/useGetContacts";
 
-const DELETE_CONTACT = gql`
-  mutation MyMutation($id: Int!) {
-    delete_contact_by_pk(id: $id) {
-      first_name
-      last_name
-      id
-    }
-  }
-`;
+// my components
+import Header from "../components/Header";
+import FormEditDialog from "../components/FormEditDialog";
+import CardItem from "../components/CardItem";
 
 const box = css`
   width: 100%;
@@ -53,29 +28,11 @@ const searchInput = css`
   justify-content: end;
 `;
 
-const CardHeader = styled.div({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-});
-
 const PaginationStyle = css`
   display: flex;
   align-items: center;
   margin: 5rem auto;
 `;
-
-type PhoneItem = {
-  number: string;
-};
-
-type ContactItem = {
-  created_at: string;
-  first_name: string;
-  id: number;
-  last_name: string;
-  phones: Array<PhoneItem>;
-};
 
 const Contact: FC = () => {
   const initialObjectContactItem: ContactItem = {
@@ -85,111 +42,72 @@ const Contact: FC = () => {
     last_name: "",
     phones: [],
   };
-  const [page, setPage] = React.useState(1);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
-    initialObjectContactItem
-  );
-  const [search, setSearch] = React.useState<string>("");
-  const [searchFirstName, setSearchFirstName] = React.useState<string>("");
-  const [searchLastName, setSearchLastName] = React.useState<string>("");
-  const [limit, setLimit] = React.useState<number>(10);
-  const [offset, setOffset] = React.useState<number | null>(page - 1);
-  const { loading, error, data, refetch } = useQuery(GET_CONTACTS, {
-    variables: {
-      limit,
-      offset,
-      where: {
-        first_name: {
-          _like: searchFirstName ? searchFirstName : "%%",
-        },
-        last_name: {
-          _like: searchLastName ? searchLastName : "%%",
-        },
-      },
-    },
+  const initPage = 1;
+  const [state, setState] = React.useState<ContactState>({
+    page: 1,
+    selectedItem: initialObjectContactItem,
+    isDialogOpen: false,
+    search: "",
+    searchFirstName: "%%",
+    searchLastName: "%%",
+    limit: 10,
+    offset: initPage - 1,
   });
 
-  const [deleteContact] = useMutation(DELETE_CONTACT);
+  const { loading, error, data, refetch } = useGetContacts({
+    limit: state.limit,
+    offset: state.offset,
+    first_name: state.searchFirstName ? state.searchFirstName : "%%",
+    last_name: state.searchLastName ? state.searchLastName : "%%",
+  });
+  const doDeleteContact = useDeleteContact();
 
   const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
-    if (search) {
-      setSearch("");
-      setSearchFirstName("%%");
-      setSearchLastName("%%");
+    if (state.search) {
+      setState({ ...state, search: "" });
+      setState({ ...state, searchFirstName: "%%" });
+      setState({ ...state, searchLastName: "%%" });
     }
-    setOffset(value);
-    setPage(value);
+
+    setState({ ...state, offset: value });
+    setState({ ...state, page: value });
     refetch();
   };
 
-  const handleEdit = (item: ContactItem) => {
-    setSelectedItem(item);
-    handleOpenDialog();
-  };
-
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true);
+  const handleOpenDialog = (item: ContactItem) => {
+    setState({ ...state, selectedItem: item });
+    setState({ ...state, isDialogOpen: true });
   };
 
   const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
-
-  const handleFavorite = (item: ContactItem) => {
-    const getFavorite = localStorage.getItem("favorites");
-    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
-    favorites.push(item);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-
-    // delete favorite contact from regular list
-    // handleDeleteContact(item);
+    setState({ ...state, isDialogOpen: false });
   };
 
   const handleDelete = (item: ContactItem) => {
-    handleDeleteContact(item);
-  };
-
-  const handleDeleteContact = (item: ContactItem) => {
-    deleteContact({ variables: { id: item.id } });
+    doDeleteContact({ id: item.id });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const value: string[] = search.split(" ");
+      const value: string[] = state.search.split(" ");
       if (value.length > 0) {
         if (value.length === 1) {
-          setSearchFirstName(`%${value[0]}%`);
+          setState({ ...state, searchFirstName: `%${value[0]}%` });
         } else {
-          setSearchFirstName(`%${value[0]}%`);
-          setSearchLastName(`%${value[1]}%`);
+          setState({ ...state, searchFirstName: `%${value[0]}%` });
+          setState({ ...state, searchLastName: `%${value[1]}%` });
         }
 
-        setOffset(null);
+        setState({ ...state, offset: null });
       }
 
       if (value.length === 1 && value[0] === "") {
-        setSearchFirstName("%%");
-        setSearchLastName("%%");
-        setOffset(page);
+        setState({ ...state, searchFirstName: "%%" });
+        setState({ ...state, searchLastName: "%%" });
+        setState({ ...state, offset: state.page });
       }
 
       refetch();
-    }
-  };
-
-  const checkContactIsFavorite = (contact: ContactItem) => {
-    const getFavorite = localStorage.getItem("favorites");
-    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
-    let favorite = null;
-    if (favorites.length > 0) {
-      favorite = favorites.find((fav: ContactItem) => fav.id === contact.id);
-    }
-
-    if (favorite) {
-      return <FavoriteIcon fontSize="inherit" />;
-    } else {
-      return <FavoriteBorderIcon fontSize="inherit" />;
     }
   };
 
@@ -205,21 +123,21 @@ const Contact: FC = () => {
             id="input-with-sx"
             label="Search Contact..."
             variant="outlined"
-            value={search}
+            value={state.search}
             onKeyPress={handleKeyPress}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setState({ ...state, search: e.target.value })}
             sx={{ width: "300px", marginRight: "1rem" }}
           />
         </Tooltip>
       </div>
-      {!isDialogOpen ? (
+      {!state.isDialogOpen ? (
         ""
       ) : (
-        <FormDialog
-          isOpen={isDialogOpen}
+        <FormEditDialog
+          isOpen={state.isDialogOpen}
           onClose={handleCloseDialog}
           mode="edit"
-          item={selectedItem}
+          item={state.selectedItem}
         />
       )}
       <>
@@ -229,75 +147,20 @@ const Contact: FC = () => {
           columns={{ xs: 4, sm: 12, md: 12 }}
         >
           {data.contact.map((item: ContactItem, index: number) => (
-            <Grid item xs={2} sm={4} md={3} key={index}>
-              <Card
-                sx={{
-                  height: "100%",
-                  margin: "1rem 1rem 1rem 0",
-                }}
-              >
-                <CardContent>
-                  <CardHeader>
-                    <div>
-                      <Typography
-                        sx={{ fontSize: 14 }}
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Contact ID {item.id}
-                      </Typography>
-                    </div>
-                    <div>
-                      <Stack direction="row">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleFavorite(item)}
-                        >
-                          <>{checkContactIsFavorite(item)}</>
-                        </IconButton>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <EditIcon fontSize="inherit" />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleDelete(item)}
-                        >
-                          <DeleteIcon fontSize="inherit" />
-                        </IconButton>
-                      </Stack>
-                    </div>
-                  </CardHeader>
-
-                  <Typography variant="h5" component="div">
-                    {item.first_name} {item.last_name}
-                  </Typography>
-                  <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                    Phone Number:
-                  </Typography>
-                  <Typography variant="body2">
-                    {item.phones.map((phone: PhoneItem, idx: number) => (
-                      <div>
-                        #{idx + 1}. {phone.number}
-                      </div>
-                    ))}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+            <CardItem
+              key={index}
+              item={item}
+              isFavorite={false}
+              onOpenDialog={handleOpenDialog}
+              onDelete={handleDelete}
+            />
           ))}
         </Grid>
-
         {/* pagination */}
         <Stack spacing={2} className={PaginationStyle}>
           <Pagination
             count={10}
-            page={page}
+            page={state.page}
             variant="outlined"
             shape="rounded"
             onChange={handleChange}

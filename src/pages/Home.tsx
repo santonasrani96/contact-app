@@ -1,36 +1,19 @@
 import React, { FC } from "react";
-import Header from "../components/Header";
+
+// Emotion
 import { css } from "@emotion/css";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
 import styled from "@emotion/styled";
 
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FormDialog from "../components/FormDialog";
+// React MaterialUI Components
+import Grid from "@mui/material/Grid";
 
-import { useMutation, gql } from "@apollo/client";
+// grapQL query hooks
+import useDeleteContact from "../hooks/useDeleteContact";
 
-const DELETE_CONTACT = gql`
-  mutation MyMutation($id: Int!) {
-    delete_contact_by_pk(id: $id) {
-      first_name
-      last_name
-      id
-    }
-  }
-`;
-
-const CardHeader = styled.div({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-});
+// my components
+import Header from "../components/Header";
+import FormEditDialog from "../components/FormEditDialog";
+import CardItem from "../components/CardItem";
 
 const box = css`
   width: 100%;
@@ -49,18 +32,6 @@ const CardEmptyFavorite = styled.div({
   color: "grey",
 });
 
-type PhoneItem = {
-  number: string;
-};
-
-type ContactItem = {
-  created_at: string;
-  first_name: string;
-  id: number;
-  last_name: string;
-  phones: Array<PhoneItem>;
-};
-
 const Home: FC = () => {
   const initialObjectContactItem: ContactItem = {
     created_at: "",
@@ -70,132 +41,53 @@ const Home: FC = () => {
     phones: [],
   };
 
-  const [deleteContact] = useMutation(DELETE_CONTACT);
-
-  const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
-    initialObjectContactItem
-  );
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [contactFavorites, setContactFavorites] = React.useState<
-    Array<ContactItem>
-  >([]);
+  const [state, setState] = React.useState<HomeState>({
+    selectedItem: initialObjectContactItem,
+    isDialogOpen: false,
+    contactFavorites: [],
+  });
 
   React.useEffect(() => {
     const getFavorite = localStorage.getItem("favorites");
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
 
     if (favorites.length > 0) {
-      setContactFavorites(favorites);
+      setState({ ...state, contactFavorites: favorites });
     }
-  }, []);
+  }, [setState, state]);
 
-  const handleUnfavorite = (item: ContactItem) => {
-    const getFavorite = localStorage.getItem("favorites");
-    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
-    const newFavorites: ContactItem[] = [];
-    favorites.forEach((favorite: ContactItem) => {
-      if (favorite.id !== item.id) {
-        newFavorites.push(favorite);
-      }
-    });
-    localStorage.setItem("favorites", JSON.stringify(newFavorites));
+  const doDeleteContact = useDeleteContact();
 
-    // delete favorite contact from regular list
-    // handleDeleteContact(item);
+  const handleCloseDialog = () => {
+    setState({ ...state, isDialogOpen: false });
+  };
+
+  const handleOpenDialog = (item: ContactItem) => {
+    setState({ ...state, selectedItem: item });
+    setState({ ...state, isDialogOpen: true });
+    console.log(state.isDialogOpen, state.selectedItem, item);
   };
 
   const handleDelete = (item: ContactItem) => {
-    handleDeleteContact(item);
-  };
-
-  const handleDeleteContact = (item: ContactItem) => {
-    deleteContact({ variables: { id: item.id } });
-  };
-
-  const handleEdit = (item: ContactItem) => {
-    setSelectedItem(item);
-    handleOpenDialog();
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
-
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true);
+    doDeleteContact({ id: item.id });
   };
 
   const setCardHTML = () => {
-    if (contactFavorites.length === 0) {
-      // set card kosong
+    if (state.contactFavorites.length === 0) {
       return (
         <>
           <CardEmptyFavorite>Contact favorite is not found</CardEmptyFavorite>
         </>
       );
     } else {
-      return contactFavorites.map((item: ContactItem, index: number) => (
-        <Grid item xs={2} sm={4} md={3} key={index}>
-          <Card
-            sx={{
-              height: "100%",
-              margin: "1rem 1rem 1rem 0",
-            }}
-          >
-            <CardContent>
-              <CardHeader>
-                <div>
-                  <Typography
-                    sx={{ fontSize: 14 }}
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Kontak No. {index + 1}
-                  </Typography>
-                </div>
-                <div>
-                  <Stack direction="row">
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleUnfavorite(item)}
-                    >
-                      <FavoriteIcon fontSize="inherit" />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEdit(item)}
-                    >
-                      <EditIcon fontSize="inherit" />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDelete(item)}
-                    >
-                      <DeleteIcon fontSize="inherit" />
-                    </IconButton>
-                  </Stack>
-                </div>
-              </CardHeader>
-
-              <Typography variant="h5" component="div">
-                {item.first_name} {item.last_name}
-              </Typography>
-              <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                Nomor Telepon:
-              </Typography>
-              <Typography variant="body2">
-                {item.phones.map((phone: PhoneItem, idx: number) => (
-                  <div>
-                    #{idx + 1}. {phone.number}
-                  </div>
-                ))}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      return state.contactFavorites.map((item: ContactItem, index: number) => (
+        <CardItem
+          key={index}
+          item={item}
+          isFavorite={true}
+          onOpenDialog={handleOpenDialog}
+          onDelete={handleDelete}
+        />
       ));
     }
   };
@@ -203,11 +95,11 @@ const Home: FC = () => {
   return (
     <div className={box}>
       <Header title="Home" />
-      <FormDialog
-        isOpen={isDialogOpen}
+      <FormEditDialog
+        isOpen={state.isDialogOpen}
         onClose={handleCloseDialog}
         mode="edit"
-        item={selectedItem}
+        item={state.selectedItem}
       />
       <div>Favorite Contact</div>
       <Grid
