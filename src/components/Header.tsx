@@ -30,40 +30,14 @@ const headerPage = css`
 `;
 
 const Header: FC<HeaderProp> = (props: HeaderProp) => {
-  const [state, setState] = React.useState<HeaderState>({
-    isDialogOpen: false,
-    // nextId: 0,
-    // inputValuePhoneNumber: "", // phoneNumber
-    // inputNewValueListPhoneNumber: [], // numbers
-    // firstName: "",
-    // lastName: "",
-    // phoneNumbers: [], //phone
-  });
-  // const [open, setOpen] = React.useState(false);
-  // const [nextId, setNextId] = React.useState(0);
-  // const [phoneNumber, setPhoneNumber] = React.useState<string>("");
-  // const [numbers, setNumbers] = React.useState<FormPhoneNumber[]>([]);
-  // const [firstName, setFirstName] = React.useState<string>("");
-  // const [lastName, setLastName] = React.useState<string>("");
-  // const [phone, setPhone] = React.useState<PhoneNumber[]>([]);
-
-  // const [createContact, { loading, error, data }] = useMutation(
-  //   ADD_CONTACT_WITH_PHONES,
-  //   {
-  //     variables: {
-  //       first_name: state.firstName,
-  //       last_name: state.lastName,
-  //       phones: state.phoneNumbers,
-  //     },
-  //   }
-  // );
+  const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
 
   const handleOpenDialog = () => {
-    setState({ ...state, isDialogOpen: true });
+    setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setState({ ...state, isDialogOpen: false });
+    setIsDialogOpen(false);
   };
 
   return (
@@ -82,11 +56,15 @@ const Header: FC<HeaderProp> = (props: HeaderProp) => {
         </div>
       </div>
       <Line />
-      <FormAddDialog
-        isOpen={state.isDialogOpen}
-        onClose={handleCloseDialog}
-        mode="add"
-      />
+      {!isDialogOpen ? (
+        ""
+      ) : (
+        <FormAddDialog
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          mode="add"
+        />
+      )}
     </div>
   );
 };

@@ -29,111 +29,82 @@ const formLabel = css`
 const FormAddDialog: React.FC<FormAddDialogProp> = (
   props: FormAddDialogProp
 ) => {
-  const [state, setState] = React.useState<FormAddDialogState>({
-    open: props.isOpen,
-    nextId: 0,
-    firstName: "",
-    lastName: "",
-    inputValuePhoneNumber: "",
-    inputNewValueListPhoneNumber: [],
-    phoneNumbers: [], //phone
-  });
+  const [open, setOpen] = React.useState<boolean>(props.isOpen);
+  const [nextId, setNextId] = React.useState<number>(0);
+  const [firstName, setFirstName] = React.useState<string>("");
+  const [lastName, setLastName] = React.useState<string>("");
+  const [inputValuePhoneNumber, setInputValuePhoneNumber] =
+    React.useState<string>("");
+  const [inputNewValueListPhoneNumber, setInputNewValueListPhoneNumber] =
+    React.useState<Array<FormPhoneNumber>>([]);
+  const [phoneNumbers, setPhoneNumbers] = React.useState<Array<PhoneNumber>>(
+    []
+  );
 
   React.useEffect(() => {
     const phoneValues: Array<PhoneNumber> = [];
 
     phoneValues.push({
-      number: state.inputValuePhoneNumber,
+      number: inputValuePhoneNumber,
     });
 
-    state.inputNewValueListPhoneNumber.forEach((item) => {
+    inputNewValueListPhoneNumber.forEach((item) => {
       phoneValues.push({
         number: item.number,
       });
     });
 
-    setState((state) => {
-      return {
-        ...state,
-        phoneNumbers: phoneValues.map((item) => ({
-          number: item.number,
-        })),
-      };
-    });
+    setPhoneNumbers(
+      phoneValues.map((item) => ({
+        number: item.number,
+      }))
+    );
 
-    // setPhone(
-    //   phoneValues.map((item) => ({
-    //     number: item.number,
-    //   }))
-    // );
     console.log("Form Add Dialog");
-  }, [state.inputNewValueListPhoneNumber, state.inputValuePhoneNumber]);
+  }, [inputNewValueListPhoneNumber, inputValuePhoneNumber]);
 
   const doAddContact = useAddContactWithPhones();
 
   const handleClose = () => {
-    setState({ ...state, open: false });
+    setOpen(false);
+    props.onClose();
   };
 
   const increasePhoneNumber = () => {
-    const currentId: number = state.nextId;
+    const currentId: number = nextId;
     const idAdded: number = currentId + 1;
-    setState({ ...state, nextId: idAdded });
+    setNextId(idAdded);
 
     const data: FormPhoneNumber = {
-      id: state.nextId,
+      id: nextId,
       number: "",
     };
 
-    //   setNumbers((oldVal) => [...oldVal, data]);
-    setState((state) => {
-      return {
-        ...state,
-        inputNewValueListPhoneNumber:
-          state.inputNewValueListPhoneNumber.concat(data),
-      };
-    });
+    setInputNewValueListPhoneNumber((oldVal) => [...oldVal, data]);
   };
 
   const decreasePhoneNumber = (dataNumber: FormPhoneNumber) => {
-    if (state.inputNewValueListPhoneNumber.length <= 0) {
+    if (inputNewValueListPhoneNumber.length <= 0) {
       return;
     }
 
     const newNumber = [
-      ...state.inputNewValueListPhoneNumber.slice(0, dataNumber.id),
-      ...state.inputNewValueListPhoneNumber.slice(dataNumber.id + 1),
+      ...inputNewValueListPhoneNumber.slice(0, dataNumber.id),
+      ...inputNewValueListPhoneNumber.slice(dataNumber.id + 1),
     ];
-    setState({ ...state, inputNewValueListPhoneNumber: [] });
-    setState((state) => {
-      return {
-        ...state,
-        inputNewValueListPhoneNumber:
-          state.inputNewValueListPhoneNumber.concat(newNumber),
-      };
-    });
+    setInputNewValueListPhoneNumber([]);
+    setInputNewValueListPhoneNumber(newNumber);
   };
 
   const handleSetInput = (value: string, index: number) => {
-    const inputNumber = [...state.inputNewValueListPhoneNumber];
+    const inputNumber = [...inputNewValueListPhoneNumber];
     inputNumber[index].number = value;
-    setState((state) => {
-      return {
-        ...state,
-        inputNewValueListPhoneNumber: inputNumber,
-      };
-    });
-    // setNumbers(inputNumber);
+    setInputNewValueListPhoneNumber(inputNumber);
   };
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
-    // e.preventDefault();
-    const isFirstNameInvalid: boolean = containsSpecialCharacters(
-      state.firstName
-    );
-    const isLastNameInvalid: boolean = containsSpecialCharacters(
-      state.lastName
-    );
+  const handleSubmit = () => {
+    const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
+    const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
     if (isFirstNameInvalid && !isLastNameInvalid) {
       alert("First Name does not allow to use special characters");
@@ -157,9 +128,9 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
 
   const createContact = () => {
     doAddContact({
-      first_name: state.firstName,
-      last_name: state.lastName,
-      phones: state.phoneNumbers,
+      first_name: firstName,
+      last_name: lastName,
+      phones: phoneNumbers,
     });
   };
 
@@ -174,7 +145,7 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
 
   return (
     <Dialog
-      open={state.open}
+      open={open}
       onClose={handleClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
@@ -193,10 +164,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
-                    value={state.firstName}
-                    onChange={(e) =>
-                      setState({ ...state, firstName: e.target.value })
-                    }
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -205,10 +174,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
-                    value={state.lastName}
-                    onChange={(e) =>
-                      setState({ ...state, lastName: e.target.value })
-                    }
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                   />
                 </Grid>
               </Grid>
@@ -226,13 +193,11 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                 id="outlined-basic"
                 fullWidth
                 variant="outlined"
-                value={state.inputValuePhoneNumber}
-                onChange={(e) =>
-                  setState({ ...state, inputValuePhoneNumber: e.target.value })
-                }
+                value={inputValuePhoneNumber}
+                onChange={(e) => setInputValuePhoneNumber(e.target.value)}
               />
               <Stack direction="column" spacing={2}>
-                {state.inputNewValueListPhoneNumber.map((item, index) => (
+                {inputNewValueListPhoneNumber.map((item, index) => (
                   <>
                     <IconButton
                       key={index}
@@ -247,9 +212,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                       fullWidth
                       variant="outlined"
                       placeholder={`Phone Number ${item.id + 1}`}
-                      value={state.inputNewValueListPhoneNumber[index].number}
+                      value={inputNewValueListPhoneNumber[index].number}
                       onChange={(e) => handleSetInput(e.target.value, index)}
-                      // onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </>
                 ))}
@@ -260,7 +224,7 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={(e) => handleSubmit(e)} autoFocus variant="contained">
+        <Button onClick={handleSubmit} autoFocus variant="contained">
           Save
         </Button>
       </DialogActions>

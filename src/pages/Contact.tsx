@@ -42,45 +42,45 @@ const Contact: FC = () => {
     last_name: "",
     phones: [],
   };
-  const initPage = 1;
-  const [state, setState] = React.useState<ContactState>({
-    page: 1,
-    selectedItem: initialObjectContactItem,
-    isDialogOpen: false,
-    search: "",
-    searchFirstName: "%%",
-    searchLastName: "%%",
-    limit: 10,
-    offset: initPage - 1,
-  });
+
+  const [page, setPage] = React.useState<number>(1);
+  const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
+    initialObjectContactItem
+  );
+  const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
+  const [search, setSearch] = React.useState<string>("");
+  const [searchFirstName, setSearchFirstName] = React.useState<string>("%%");
+  const [searchLastName, setSearchLastName] = React.useState<string>("%%");
+  const [limit, setLimit] = React.useState<number>(10);
+  const [offset, setOffset] = React.useState<number | null>(page - 1);
 
   const { loading, error, data, refetch } = useGetContacts({
-    limit: state.limit,
-    offset: state.offset,
-    first_name: state.searchFirstName ? state.searchFirstName : "%%",
-    last_name: state.searchLastName ? state.searchLastName : "%%",
+    limit,
+    offset,
+    first_name: searchFirstName,
+    last_name: searchLastName,
   });
   const doDeleteContact = useDeleteContact();
 
   const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
-    if (state.search) {
-      setState({ ...state, search: "" });
-      setState({ ...state, searchFirstName: "%%" });
-      setState({ ...state, searchLastName: "%%" });
+    if (search) {
+      setSearch("");
+      setSearchFirstName("%%");
+      setSearchLastName("%%");
     }
 
-    setState({ ...state, offset: value });
-    setState({ ...state, page: value });
+    setOffset(value);
+    setPage(value);
     refetch();
   };
 
   const handleOpenDialog = (item: ContactItem) => {
-    setState({ ...state, selectedItem: item });
-    setState({ ...state, isDialogOpen: true });
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setState({ ...state, isDialogOpen: false });
+    setIsDialogOpen(false);
   };
 
   const handleDelete = (item: ContactItem) => {
@@ -89,22 +89,22 @@ const Contact: FC = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const value: string[] = state.search.split(" ");
+      const value: string[] = search.split(" ");
       if (value.length > 0) {
         if (value.length === 1) {
-          setState({ ...state, searchFirstName: `%${value[0]}%` });
+          setSearchFirstName(`%${value[0]}%`);
         } else {
-          setState({ ...state, searchFirstName: `%${value[0]}%` });
-          setState({ ...state, searchLastName: `%${value[1]}%` });
+          setSearchFirstName(`%${value[0]}%`);
+          setSearchFirstName(`%${value[1]}%`);
         }
 
-        setState({ ...state, offset: null });
+        setOffset(null);
       }
 
       if (value.length === 1 && value[0] === "") {
-        setState({ ...state, searchFirstName: "%%" });
-        setState({ ...state, searchLastName: "%%" });
-        setState({ ...state, offset: state.page });
+        setSearchFirstName("%%");
+        setSearchFirstName("%%");
+        setOffset(page);
       }
 
       refetch();
@@ -123,21 +123,21 @@ const Contact: FC = () => {
             id="input-with-sx"
             label="Search Contact..."
             variant="outlined"
-            value={state.search}
+            value={search}
             onKeyPress={handleKeyPress}
-            onChange={(e) => setState({ ...state, search: e.target.value })}
+            onChange={(e) => setSearch(e.target.value)}
             sx={{ width: "300px", marginRight: "1rem" }}
           />
         </Tooltip>
       </div>
-      {!state.isDialogOpen ? (
+      {!isDialogOpen ? (
         ""
       ) : (
         <FormEditDialog
-          isOpen={state.isDialogOpen}
+          isOpen={isDialogOpen}
           onClose={handleCloseDialog}
           mode="edit"
-          item={state.selectedItem}
+          item={selectedItem}
         />
       )}
       <>
@@ -160,7 +160,7 @@ const Contact: FC = () => {
         <Stack spacing={2} className={PaginationStyle}>
           <Pagination
             count={10}
-            page={state.page}
+            page={page}
             variant="outlined"
             shape="rounded"
             onChange={handleChange}

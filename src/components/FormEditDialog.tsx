@@ -27,14 +27,17 @@ const formLabel = css`
 const FormEditDialog: React.FC<FormEditDialogProp> = (
   props: FormEditDialogProp
 ) => {
-  const [state, setState] = React.useState<FormEditDialogState>({
-    open: props.isOpen,
-    firstName: "",
-    lastName: "",
-    inputValueListPhoneNumber: [], //numbers
-    phoneNumbers: [], //phone
-    oldNumbers: props.item.phones,
-  });
+  const [open, setOpen] = React.useState<boolean>(props.isOpen);
+  const [firstName, setFirstName] = React.useState<string>("");
+  const [lastName, setLastName] = React.useState<string>("");
+  const [inputValueListPhoneNumber, setInputValueListPhoneNumber] =
+    React.useState<Array<FormPhoneNumber>>([]);
+  const [phoneNumbers, setPhoneNumbers] = React.useState<Array<PhoneNumber>>(
+    []
+  );
+  const [oldNumbers, setOldNumbers] = React.useState<Array<PhoneNumber>>(
+    props.item.phones
+  );
 
   const { loading, error, data } = useGetContact({
     id: props.item.id,
@@ -43,114 +46,48 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   const doEditContact = useEditContact();
   const doEditPhoneNumber = useEditPhoneNumber();
 
-  // React.useEffect(() => {
-  //   const phoneValues = state.inputValueListPhoneNumber.map((item) => ({
-  //     number: item.number,
-  //   }));
-
-  //   setState({ ...state, phoneNumbers: phoneValues });
-  // }, [state]);
-
   React.useEffect(() => {
-    // setState((state) => {
-    //   return {
-    //     ...state,
-    //     inputValueListPhoneNumber: [],
-    //   };
-    // });
-    // setState({ ...state, firstName: "" });
-    // setState({ ...state, lastName: "" });
-    setState((prevState) => {
-      if (data && data.contact_by_pk) {
-        // setState({ ...state, firstName: data.contact_by_pk.first_name });
-        // setState({ ...state, lastName: data.contact_by_pk.last_name });
-        const numbers: Array<FormPhoneNumber> = [];
-        data.contact_by_pk.phones.forEach(
-          (item: PhoneNumber, index: number) => {
-            numbers.push({
-              id: index + 1,
-              number: item.number,
-            });
-          }
-        );
-
-        const phoneValues = state.inputValueListPhoneNumber.map((item) => ({
+    let numbers: Array<FormPhoneNumber> = [];
+    if (data && data.contact_by_pk) {
+      data.contact_by_pk.phones.forEach((item: PhoneNumber, index: number) => {
+        numbers.push({
+          id: index + 1,
           number: item.number,
-        }));
+        });
+      });
 
-        return {
-          ...prevState,
-          inputValueListPhoneNumber: numbers,
-          firstName: data.contact_by_pk.first_name,
-          lastName: data.contact_by_pk.last_name,
-          phoneNumbers: phoneValues,
-        };
-        // setState((state) => {
-        //   return {
-        //     ...state,
-        //     inputValueListPhoneNumber: numbers,
-        //   };
-        // });
-      }
-
-      return prevState;
-    });
-    // if (data && data.contact_by_pk) {
-    //   setState({ ...state, firstName: data.contact_by_pk.first_name });
-    //   setState({ ...state, lastName: data.contact_by_pk.last_name });
-    //   const numbers: Array<FormPhoneNumber> = [];
-
-    //   data.contact_by_pk.phones.forEach((item: PhoneNumber, index: number) => {
-    //     numbers.push({
-    //       id: index + 1,
-    //       number: item.number,
-    //     });
-    //   });
-    //   setState((state) => {
-    //     return {
-    //       ...state,
-    //       inputValueListPhoneNumber: numbers,
-    //     };
-    //   });
-    // }
+      setInputValueListPhoneNumber(numbers);
+      setFirstName(data.contact_by_pk.first_name);
+      setLastName(data.contact_by_pk.last_name);
+    }
 
     console.log("Form Edit Dialog");
+  }, [data]);
 
-    // const phoneValues = state.inputValueListPhoneNumber.map((item) => ({
-    //   number: item.number,
-    // }));
-
-    // setState((state) => {
-    //   return {
-    //     ...state,
-    //     phoneNumbers: phoneValues,
-    //   };
-    // });
-  }, [data, props.mode, state]);
+  React.useEffect(() => {
+    let phoneValues: PhoneNumber[] = [];
+    if (inputValueListPhoneNumber.length > 0) {
+      phoneValues = inputValueListPhoneNumber.map((item) => ({
+        number: item.number,
+      }));
+    }
+    setPhoneNumbers(phoneValues);
+  }, [inputValueListPhoneNumber]);
 
   const handleClose = () => {
-    setState({ ...state, open: false });
+    setOpen(false);
     props.onClose();
   };
 
   const handleSetInput = (value: string, index: number) => {
-    const numbers = [...state.inputValueListPhoneNumber];
+    const numbers = [...inputValueListPhoneNumber];
     numbers[index].number = value;
-    setState((state) => {
-      return {
-        ...state,
-        inputValueListPhoneNumber: numbers,
-      };
-    });
+    setInputValueListPhoneNumber(numbers);
   };
 
   const handleSubmit = () => {
-    const isFirstNameInvalid: boolean = containsSpecialCharacters(
-      state.firstName
-    );
-    const isLastNameInvalid: boolean = containsSpecialCharacters(
-      state.lastName
-    );
+    const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
+    const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
     if (isFirstNameInvalid && !isLastNameInvalid) {
       alert("First Name does not allow to use special characters");
@@ -176,11 +113,13 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   };
 
   const setEditPhoneNumber = () => {
-    state.oldNumbers.forEach((old: PhoneNumber, index: number) => {
+    console.log("lama ", oldNumbers);
+    console.log("baru ", phoneNumbers);
+    oldNumbers.forEach((old: PhoneNumber, index: number) => {
       doEditPhoneNumber({
         number: old.number,
         contact_id: props.item.id,
-        new_phone_number: state.phoneNumbers[index].number,
+        new_phone_number: phoneNumbers[index].number,
       });
     });
   };
@@ -188,8 +127,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   const setEditContact = () => {
     doEditContact({
       id: props.item.id,
-      first_name: state.firstName,
-      last_name: state.lastName,
+      first_name: firstName,
+      last_name: lastName,
     });
   };
 
@@ -204,7 +143,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   return (
     <>
       <Dialog
-        open={state.open}
+        open={open}
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
@@ -223,10 +162,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                       id="outlined-basic"
                       fullWidth
                       variant="outlined"
-                      value={state.firstName}
-                      onChange={(e) =>
-                        setState({ ...state, firstName: e.target.value })
-                      }
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={6}>
@@ -235,10 +172,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                       id="outlined-basic"
                       fullWidth
                       variant="outlined"
-                      value={state.lastName}
-                      onChange={(e) =>
-                        setState({ ...state, lastName: e.target.value })
-                      }
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                     />
                   </Grid>
                 </Grid>
@@ -247,7 +182,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                 <div className={formLabel}>
                   <div>Phone Number</div>
                 </div>
-                {state.inputValueListPhoneNumber.map((item, index) => (
+                {inputValueListPhoneNumber.map((item, index) => (
                   <>
                     <TextField
                       sx={index === 0 ? {} : { marginTop: "1rem" }}
@@ -256,7 +191,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                       fullWidth
                       variant="outlined"
                       placeholder={`Phone Number ${item.id}`}
-                      value={state.inputValueListPhoneNumber[index].number}
+                      value={inputValueListPhoneNumber[index].number}
                       onChange={(e) => handleSetInput(e.target.value, index)}
                     />
                   </>

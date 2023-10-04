@@ -76,42 +76,6 @@ type UseAddContactWithPhones = {
   phones: Array<PhoneNumber>;
 };
 
-type HomeState = {
-  selectedItem: ContactItem;
-  isDialogOpen: boolean;
-  contactFavorites: Array<ContactItem>;
-};
-
-type ContactState = {
-  page: number;
-  selectedItem: ContactItem;
-  isDialogOpen: boolean;
-  search: string;
-  searchFirstName: string;
-  searchLastName: string;
-  limit: number;
-  offset: number | null;
-};
-
-type FormAddDialogState = {
-  open: boolean;
-  nextId: number;
-  firstName: string;
-  lastName: string;
-  inputValuePhoneNumber: string;
-  inputNewValueListPhoneNumber: Array<FormPhoneNumber>;
-  phoneNumbers: Array<PhoneNumber>;
-};
-
-type FormEditDialogState = {
-  open: boolean;
-  firstName: string;
-  lastName: string;
-  inputValueListPhoneNumber: Array<FormPhoneNumber>;
-  phoneNumbers: Array<PhoneNumber>;
-  oldNumbers: Array<PhoneNumber>;
-};
-
 type HeaderState = {
   isDialogOpen: boolean;
 };

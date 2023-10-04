@@ -41,31 +41,32 @@ const Home: FC = () => {
     phones: [],
   };
 
-  const [state, setState] = React.useState<HomeState>({
-    selectedItem: initialObjectContactItem,
-    isDialogOpen: false,
-    contactFavorites: [],
-  });
+  const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
+    initialObjectContactItem
+  );
+  const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
+  const [contactFavorites, setContactFavorites] = React.useState<
+    Array<ContactItem>
+  >([]);
 
   React.useEffect(() => {
     const getFavorite = localStorage.getItem("favorites");
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
 
     if (favorites.length > 0) {
-      setState({ ...state, contactFavorites: favorites });
+      setContactFavorites(favorites);
     }
-  }, [setState, state]);
+  }, []);
 
   const doDeleteContact = useDeleteContact();
 
   const handleCloseDialog = () => {
-    setState({ ...state, isDialogOpen: false });
+    setIsDialogOpen(false);
   };
 
   const handleOpenDialog = (item: ContactItem) => {
-    setState({ ...state, selectedItem: item });
-    setState({ ...state, isDialogOpen: true });
-    console.log(state.isDialogOpen, state.selectedItem, item);
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
 
   const handleDelete = (item: ContactItem) => {
@@ -73,14 +74,14 @@ const Home: FC = () => {
   };
 
   const setCardHTML = () => {
-    if (state.contactFavorites.length === 0) {
+    if (contactFavorites.length === 0) {
       return (
         <>
           <CardEmptyFavorite>Contact favorite is not found</CardEmptyFavorite>
         </>
       );
     } else {
-      return state.contactFavorites.map((item: ContactItem, index: number) => (
+      return contactFavorites.map((item: ContactItem, index: number) => (
         <CardItem
           key={index}
           item={item}
@@ -96,10 +97,10 @@ const Home: FC = () => {
     <div className={box}>
       <Header title="Home" />
       <FormEditDialog
-        isOpen={state.isDialogOpen}
+        isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         mode="edit"
-        item={state.selectedItem}
+        item={selectedItem}
       />
       <div>Favorite Contact</div>
       <Grid
