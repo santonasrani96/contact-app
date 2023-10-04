@@ -93,10 +93,12 @@ const Contact: FC = () => {
   const [search, setSearch] = React.useState<string>("");
   const [searchFirstName, setSearchFirstName] = React.useState<string>("");
   const [searchLastName, setSearchLastName] = React.useState<string>("");
+  const [limit, setLimit] = React.useState<number>(10);
+  const [offset, setOffset] = React.useState<number | null>(page - 1);
   const { loading, error, data, refetch } = useQuery(GET_CONTACTS, {
     variables: {
-      limit: 10,
-      offset: page - 1,
+      limit,
+      offset,
       where: {
         first_name: {
           _like: searchFirstName ? searchFirstName : "%%",
@@ -111,6 +113,12 @@ const Contact: FC = () => {
   const [deleteContact] = useMutation(DELETE_CONTACT);
 
   const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
+    if (search) {
+      setSearch("");
+      setSearchFirstName("%%");
+      setSearchLastName("%%");
+    }
+    setOffset(value);
     setPage(value);
     refetch();
   };
@@ -156,9 +164,14 @@ const Contact: FC = () => {
           setSearchFirstName(`%${value[0]}%`);
           setSearchLastName(`%${value[1]}%`);
         }
-      } else {
+
+        setOffset(null);
+      }
+
+      if (value.length === 1 && value[0] === "") {
         setSearchFirstName("%%");
         setSearchLastName("%%");
+        setOffset(page);
       }
 
       refetch();
