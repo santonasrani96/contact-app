@@ -20,6 +20,11 @@ import FormEditDialog from "../components/FormEditDialog";
 import CardItem from "../components/CardItem";
 import ConfirmDialog from "../components/ConfirmDialog";
 import SnackbarItem from "../components/SnackbarItem";
+import InnerLoading from "../components/InnerLoading";
+
+const isLoading = (value: boolean) => {
+  return <InnerLoading isOpen={value} />;
+};
 
 const box = css`
   width: 100%;
@@ -193,8 +198,18 @@ const Contact: FC = () => {
     refetch();
   };
 
-  if (loading) return <p>Loading Contact...</p>;
-  if (error) return <p>Error : {error.message}</p>;
+  if (loading) return <div>{isLoading(loading)}</div>;
+  if (error)
+    return (
+      <div>
+        <SnackbarItem
+          isOpen={true}
+          message={"Failed to load contact"}
+          type={"error"}
+          onClose={handleCloseSnackbar}
+        />
+      </div>
+    );
 
   return (
     <div className={box}>

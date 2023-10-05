@@ -72,6 +72,10 @@ type CardItemProp = {
   onUnfavorite?: Function;
 };
 
+type InnerLoadingProp = {
+  isOpen: boolean;
+};
+
 type UseGetContactsProp = {
   limit: number;
   offset: number | null;
