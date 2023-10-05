@@ -84,7 +84,15 @@ const Home: FC = () => {
   };
 
   const handleSubmitEdit = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: true,
+      type: "success",
+      message: "Contact successfully updated",
+    }));
+    handleCloseDialog();
     setCardHTML();
+    window.location.reload();
   };
 
   const handleUnfavorite = () => {

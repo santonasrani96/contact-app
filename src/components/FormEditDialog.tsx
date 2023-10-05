@@ -71,10 +71,21 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       setInputValueListPhoneNumber(numbers);
       setFirstName(data.contact_by_pk.first_name);
       setLastName(data.contact_by_pk.last_name);
+    } else {
+      props.item.phones.forEach((item: PhoneNumber, index: number) => {
+        numbers.push({
+          id: index + 1,
+          number: item.number,
+        });
+      });
+
+      setInputValueListPhoneNumber(numbers);
+      setFirstName(props.item.first_name);
+      setLastName(props.item.last_name);
     }
 
-    console.log("Form Edit Dialog");
-  }, [data]);
+    console.log("Form Edit Dialog", data);
+  }, [data, props]);
 
   React.useEffect(() => {
     let phoneValues: PhoneNumber[] = [];
@@ -119,31 +130,34 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     }
 
     try {
-      await doEditContact({
-        id: props.item.id,
-        first_name: firstName,
-        last_name: lastName,
-      });
+      if (data && data.contact_by_pk) {
+        await doEditContact({
+          id: props.item.id,
+          first_name: firstName,
+          last_name: lastName,
+        });
 
-      for (const index in oldNumbers) {
-        const oldNumber = oldNumbers[index];
-        try {
-          await doEditPhoneNumber({
-            number: oldNumber.number,
-            contact_id: props.item.id,
-            new_phone_number: phoneNumbers[index].number,
-          });
-        } catch (error) {
-          console.log("Failed to update number in contact ", error);
-          setSnackbarConfiguration((state) => ({
-            ...state,
-            isOpen: true,
-            type: "error",
-            message: "Failed to update number in contact",
-          }));
+        for (const index in oldNumbers) {
+          const oldNumber = oldNumbers[index];
+          try {
+            await doEditPhoneNumber({
+              number: oldNumber.number,
+              contact_id: props.item.id,
+              new_phone_number: phoneNumbers[index].number,
+            });
+          } catch (error) {
+            console.log("Failed to update number in contact ", error);
+            setSnackbarConfiguration((state) => ({
+              ...state,
+              isOpen: true,
+              type: "error",
+              message: "Failed to update number in contact",
+            }));
+          }
         }
       }
 
+      updateContactFavorite();
       props.onSubmit();
     } catch (error) {
       console.log("Failed to update contact ", error);
@@ -154,6 +168,24 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
         message: "Failed to update contact",
       }));
     }
+  };
+
+  const updateContactFavorite = () => {
+    const getFavorite = localStorage.getItem("favorites");
+    const favorites = getFavorite ? JSON.parse(getFavorite) : [];
+    if (favorites.length > 0) {
+      const indexToUpdate = favorites.findIndex(
+        (favorite: ContactItem) => favorite.id === props.item.id
+      );
+
+      if (indexToUpdate !== -1) {
+        favorites[indexToUpdate].first_name = firstName;
+        favorites[indexToUpdate].last_name = lastName;
+        favorites[indexToUpdate].phones = phoneNumbers;
+      }
+    }
+
+    localStorage.setItem("favorites", JSON.stringify(favorites));
   };
 
   const handleCloseSnackbar = () => {
