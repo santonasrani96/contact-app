@@ -154,11 +154,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
         message: "Failed to update contact",
       }));
     }
-
-    // setEditContact();
-    // setEditPhoneNumber();
-
-    // alert("disimpan");
   };
 
   const handleCloseSnackbar = () => {
@@ -167,24 +162,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       isOpen: false,
     }));
   };
-
-  // const setEditPhoneNumber = () => {
-  //   oldNumbers.forEach((old: PhoneNumber, index: number) => {
-  //     doEditPhoneNumber({
-  //       number: old.number,
-  //       contact_id: props.item.id,
-  //       new_phone_number: phoneNumbers[index].number,
-  //     });
-  //   });
-  // };
-
-  // const setEditContact = () => {
-  //   doEditContact({
-  //     id: props.item.id,
-  //     first_name: firstName,
-  //     last_name: lastName,
-  //   });
-  // };
 
   const containsSpecialCharacters = (value: string) => {
     const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;

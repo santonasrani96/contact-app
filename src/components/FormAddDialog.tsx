@@ -23,6 +23,12 @@ import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
 // My components
 import SnackbarItem from "./SnackbarItem";
 
+const removeButton = css`
+  padding: 1rem 0 0 0;
+  display: flex;
+  justify-content: end;
+`;
+
 const formLabel = css`
   display: flex;
   justify-content: space-between;
@@ -100,12 +106,16 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
       return;
     }
 
-    const newNumber = [
-      ...inputNewValueListPhoneNumber.slice(0, dataNumber.id),
-      ...inputNewValueListPhoneNumber.slice(dataNumber.id + 1),
-    ];
-    setInputNewValueListPhoneNumber([]);
-    setInputNewValueListPhoneNumber(newNumber);
+    const currentNumbers = [...inputNewValueListPhoneNumber];
+    const indexToRemove = currentNumbers.findIndex(
+      (item) => item.id === dataNumber.id
+    );
+
+    if (indexToRemove !== -1) {
+      currentNumbers.splice(indexToRemove, 1);
+
+      setInputNewValueListPhoneNumber(currentNumbers);
+    }
   };
 
   const handleSetInput = (value: string, index: number) => {
@@ -163,92 +173,113 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     }
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: false,
+    }));
+  };
+
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle id="alert-dialog-title">Add New Contact</DialogTitle>
-      <DialogContent>
-        <DialogContentText id="alert-dialog-description">
-          <Grid container rowSpacing={3}>
-            <Grid item xs={12}>
-              <Grid container columnSpacing={2}>
-                <Grid item xs={6}>
-                  <span>First Name</span>
-                  <TextField
-                    id="outlined-basic"
-                    fullWidth
-                    variant="outlined"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <span>Last Name</span>
-                  <TextField
-                    id="outlined-basic"
-                    fullWidth
-                    variant="outlined"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <div className={formLabel}>
-                <div>Phone Number</div>
-                <div>
-                  <IconButton color="primary" onClick={increasePhoneNumber}>
-                    <AddIcon />
-                  </IconButton>
-                </div>
-              </div>
-              <TextField
-                id="outlined-basic"
-                fullWidth
-                variant="outlined"
-                value={inputValuePhoneNumber}
-                onChange={(e) => setInputValuePhoneNumber(e.target.value)}
-              />
-              <Stack direction="column" spacing={2}>
-                {inputNewValueListPhoneNumber.map((item, index) => (
-                  <>
-                    <IconButton
-                      key={index}
-                      color="primary"
-                      onClick={() => decreasePhoneNumber(item)}
-                    >
-                      <RemoveIcon />
-                    </IconButton>
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">Add New Contact</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <Grid container rowSpacing={3}>
+              <Grid item xs={12}>
+                <Grid container columnSpacing={2}>
+                  <Grid item xs={6}>
+                    <span>First Name</span>
                     <TextField
-                      key={index}
                       id="outlined-basic"
                       fullWidth
                       variant="outlined"
-                      placeholder={`Phone Number ${item.id + 1}`}
-                      value={inputNewValueListPhoneNumber[index].number}
-                      onChange={(e) => handleSetInput(e.target.value, index)}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                     />
-                  </>
-                ))}
-              </Stack>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <span>Last Name</span>
+                    <TextField
+                      id="outlined-basic"
+                      fullWidth
+                      variant="outlined"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid item xs={12}>
+                <div className={formLabel}>
+                  <div>Phone Number</div>
+                  <div>
+                    <IconButton color="primary" onClick={increasePhoneNumber}>
+                      <AddIcon />
+                    </IconButton>
+                  </div>
+                </div>
+                <TextField
+                  id="outlined-basic"
+                  fullWidth
+                  variant="outlined"
+                  value={inputValuePhoneNumber}
+                  onChange={(e) => setInputValuePhoneNumber(e.target.value)}
+                />
+                <Stack direction="column" spacing={1}>
+                  {inputNewValueListPhoneNumber.map((item, index) => (
+                    <>
+                      <div className={removeButton}>
+                        <IconButton
+                          key={index}
+                          color="error"
+                          onClick={() => decreasePhoneNumber(item)}
+                        >
+                          <RemoveIcon />
+                        </IconButton>
+                      </div>
+                      <TextField
+                        key={index}
+                        id="outlined-basic"
+                        fullWidth
+                        variant="outlined"
+                        value={inputNewValueListPhoneNumber[index].number}
+                        onChange={(e) => handleSetInput(e.target.value, index)}
+                      />
+                    </>
+                  ))}
+                </Stack>
+              </Grid>
             </Grid>
-          </Grid>
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={handleSubmit} autoFocus variant="contained">
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} autoFocus variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {!snackbarConfiguration.isOpen ? (
+        ""
+      ) : (
+        <SnackbarItem
+          isOpen={snackbarConfiguration.isOpen}
+          message={snackbarConfiguration.message}
+          type={snackbarConfiguration.type}
+          onClose={handleCloseSnackbar}
+        />
+      )}
+    </>
   );
 };
 
