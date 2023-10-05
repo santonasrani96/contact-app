@@ -18,6 +18,8 @@ import useGetContacts from "../hooks/useGetContacts";
 import Header from "../components/Header";
 import FormEditDialog from "../components/FormEditDialog";
 import CardItem from "../components/CardItem";
+import ConfirmDialog from "../components/ConfirmDialog";
+import SnackbarItem from "../components/SnackbarItem";
 
 const box = css`
   width: 100%;
@@ -43,6 +45,13 @@ const Contact: FC = () => {
     phones: [],
   };
 
+  const configurationSnackbar: SnackbarConfigurationType = {
+    isOpen: false,
+    type: "success",
+    duration: 3000,
+    message: "Success",
+  };
+
   const [page, setPage] = React.useState<number>(1);
   const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
     initialObjectContactItem
@@ -53,6 +62,10 @@ const Contact: FC = () => {
   const [searchLastName, setSearchLastName] = React.useState<string>("%%");
   const [limit, setLimit] = React.useState<number>(10);
   const [offset, setOffset] = React.useState<number | null>(page - 1);
+  const [showConfirmDialog, setShowConfirmDialog] =
+    React.useState<boolean>(false);
+  const [snackbarConfiguration, setSnackbarConfiguration] =
+    React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
   const { loading, error, data, refetch } = useGetContacts({
     limit,
@@ -84,7 +97,55 @@ const Contact: FC = () => {
   };
 
   const handleDelete = (item: ContactItem) => {
-    doDeleteContact({ id: item.id });
+    setSelectedItem(initialObjectContactItem);
+    setSelectedItem(item);
+    setShowConfirmDialog(true);
+  };
+
+  const handleOnYes = async () => {
+    try {
+      await doDeleteContact({ id: selectedItem.id });
+
+      refetch();
+
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "success",
+        message: "Contact successfully deleted",
+      }));
+      resetState();
+    } catch (error) {
+      console.log("Failed to delete contact ", error);
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "error",
+        message: "Failed to delete contact",
+      }));
+    }
+  };
+
+  const handleOnNo = () => {
+    handleCloseConfirmDialog();
+    resetState();
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setShowConfirmDialog(false);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: false,
+    }));
+  };
+
+  const resetState = () => {
+    setSelectedItem(initialObjectContactItem);
+    setShowConfirmDialog(false);
+    setIsDialogOpen(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -111,12 +172,38 @@ const Contact: FC = () => {
     }
   };
 
+  const handleFavorite = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: true,
+      type: "success",
+      message: "Contact successfully added to favorite list",
+    }));
+    refetch();
+  };
+
+  const handleSubmit = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: true,
+      type: "success",
+      message: "Contact successfully updated",
+    }));
+    handleCloseDialog();
+    refetch();
+  };
+
   if (loading) return <p>Loading Contact...</p>;
   if (error) return <p>Error : {error.message}</p>;
 
   return (
     <div className={box}>
-      <Header title="Contact" />
+      <Header
+        title="Contact"
+        onSubmit={() => {
+          refetch();
+        }}
+      />
       <div className={searchInput}>
         <Tooltip title="Hit 'Enter' to search">
           <TextField
@@ -130,16 +217,6 @@ const Contact: FC = () => {
           />
         </Tooltip>
       </div>
-      {!isDialogOpen ? (
-        ""
-      ) : (
-        <FormEditDialog
-          isOpen={isDialogOpen}
-          onClose={handleCloseDialog}
-          mode="edit"
-          item={selectedItem}
-        />
-      )}
       <>
         <Grid
           container
@@ -153,6 +230,7 @@ const Contact: FC = () => {
               isFavorite={false}
               onOpenDialog={handleOpenDialog}
               onDelete={handleDelete}
+              onFavorite={handleFavorite}
             />
           ))}
         </Grid>
@@ -167,6 +245,42 @@ const Contact: FC = () => {
           />
         </Stack>
       </>
+
+      {/* components */}
+      {!snackbarConfiguration.isOpen ? (
+        ""
+      ) : (
+        <SnackbarItem
+          isOpen={snackbarConfiguration.isOpen}
+          message={snackbarConfiguration.message}
+          type={snackbarConfiguration.type}
+          onClose={handleCloseSnackbar}
+        />
+      )}
+
+      {!isDialogOpen ? (
+        ""
+      ) : (
+        <FormEditDialog
+          isOpen={isDialogOpen}
+          mode="edit"
+          item={selectedItem}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmit}
+        />
+      )}
+
+      {!showConfirmDialog ? (
+        ""
+      ) : (
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          onYes={handleOnYes}
+          onNo={handleOnNo}
+          onClose={handleCloseConfirmDialog}
+          message={`Are you sure to delete ${selectedItem.first_name} ${selectedItem.last_name} from contact list?`}
+        />
+      )}
     </div>
   );
 };

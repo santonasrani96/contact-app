@@ -18,6 +18,9 @@ import useGetContact from "../hooks/useGetContact";
 import useEditContact from "../hooks/useEditContact";
 import useEditPhoneNumber from "../hooks/useEditPhoneNumber";
 
+// My components
+import SnackbarItem from "./SnackbarItem";
+
 const formLabel = css`
   display: flex;
   justify-content: space-between;
@@ -27,6 +30,13 @@ const formLabel = css`
 const FormEditDialog: React.FC<FormEditDialogProp> = (
   props: FormEditDialogProp
 ) => {
+  const configurationSnackbar: SnackbarConfigurationType = {
+    isOpen: false,
+    type: "success",
+    duration: 3000,
+    message: "Success",
+  };
+
   const [open, setOpen] = React.useState<boolean>(props.isOpen);
   const [firstName, setFirstName] = React.useState<string>("");
   const [lastName, setLastName] = React.useState<string>("");
@@ -38,6 +48,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   const [oldNumbers, setOldNumbers] = React.useState<Array<PhoneNumber>>(
     props.item.phones
   );
+  const [snackbarConfiguration, setSnackbarConfiguration] =
+    React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
   const { loading, error, data } = useGetContact({
     id: props.item.id,
@@ -85,7 +97,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     setInputValueListPhoneNumber(numbers);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
@@ -106,31 +118,73 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       return;
     }
 
-    setEditContact();
-    setEditPhoneNumber();
-
-    alert("disimpan");
-  };
-
-  const setEditPhoneNumber = () => {
-    console.log("lama ", oldNumbers);
-    console.log("baru ", phoneNumbers);
-    oldNumbers.forEach((old: PhoneNumber, index: number) => {
-      doEditPhoneNumber({
-        number: old.number,
-        contact_id: props.item.id,
-        new_phone_number: phoneNumbers[index].number,
+    try {
+      await doEditContact({
+        id: props.item.id,
+        first_name: firstName,
+        last_name: lastName,
       });
-    });
+
+      for (const index in oldNumbers) {
+        const oldNumber = oldNumbers[index];
+        try {
+          await doEditPhoneNumber({
+            number: oldNumber.number,
+            contact_id: props.item.id,
+            new_phone_number: phoneNumbers[index].number,
+          });
+        } catch (error) {
+          console.log("Failed to update number in contact ", error);
+          setSnackbarConfiguration((state) => ({
+            ...state,
+            isOpen: true,
+            type: "error",
+            message: "Failed to update number in contact",
+          }));
+        }
+      }
+
+      props.onSubmit();
+    } catch (error) {
+      console.log("Failed to update contact ", error);
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "error",
+        message: "Failed to update contact",
+      }));
+    }
+
+    // setEditContact();
+    // setEditPhoneNumber();
+
+    // alert("disimpan");
   };
 
-  const setEditContact = () => {
-    doEditContact({
-      id: props.item.id,
-      first_name: firstName,
-      last_name: lastName,
-    });
+  const handleCloseSnackbar = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: false,
+    }));
   };
+
+  // const setEditPhoneNumber = () => {
+  //   oldNumbers.forEach((old: PhoneNumber, index: number) => {
+  //     doEditPhoneNumber({
+  //       number: old.number,
+  //       contact_id: props.item.id,
+  //       new_phone_number: phoneNumbers[index].number,
+  //     });
+  //   });
+  // };
+
+  // const setEditContact = () => {
+  //   doEditContact({
+  //     id: props.item.id,
+  //     first_name: firstName,
+  //     last_name: lastName,
+  //   });
+  // };
 
   const containsSpecialCharacters = (value: string) => {
     const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
@@ -207,6 +261,17 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
           </Button>
         </DialogActions>
       </Dialog>
+
+      {!snackbarConfiguration.isOpen ? (
+        ""
+      ) : (
+        <SnackbarItem
+          isOpen={snackbarConfiguration.isOpen}
+          message={snackbarConfiguration.message}
+          type={snackbarConfiguration.type}
+          onClose={handleCloseSnackbar}
+        />
+      )}
     </>
   );
 };

@@ -20,6 +20,9 @@ import Stack from "@mui/material/Stack";
 // grapQL query hooks
 import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
 
+// My components
+import SnackbarItem from "./SnackbarItem";
+
 const formLabel = css`
   display: flex;
   justify-content: space-between;
@@ -29,6 +32,13 @@ const formLabel = css`
 const FormAddDialog: React.FC<FormAddDialogProp> = (
   props: FormAddDialogProp
 ) => {
+  const configurationSnackbar: SnackbarConfigurationType = {
+    isOpen: false,
+    type: "success",
+    duration: 3000,
+    message: "Success",
+  };
+
   const [open, setOpen] = React.useState<boolean>(props.isOpen);
   const [nextId, setNextId] = React.useState<number>(0);
   const [firstName, setFirstName] = React.useState<string>("");
@@ -40,6 +50,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
   const [phoneNumbers, setPhoneNumbers] = React.useState<Array<PhoneNumber>>(
     []
   );
+  const [snackbarConfiguration, setSnackbarConfiguration] =
+    React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
   React.useEffect(() => {
     const phoneValues: Array<PhoneNumber> = [];
@@ -102,7 +114,7 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     setInputNewValueListPhoneNumber(inputNumber);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
@@ -123,15 +135,23 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
       return;
     }
 
-    createContact();
-  };
+    try {
+      await doAddContact({
+        first_name: firstName,
+        last_name: lastName,
+        phones: phoneNumbers,
+      });
 
-  const createContact = () => {
-    doAddContact({
-      first_name: firstName,
-      last_name: lastName,
-      phones: phoneNumbers,
-    });
+      props.onSubmit();
+    } catch (error) {
+      console.log("Failed to create contact ", error);
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "error",
+        message: "Failed to create contact",
+      }));
+    }
   };
 
   const containsSpecialCharacters = (value: string) => {

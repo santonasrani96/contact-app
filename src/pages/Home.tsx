@@ -14,6 +14,7 @@ import useDeleteContact from "../hooks/useDeleteContact";
 import Header from "../components/Header";
 import FormEditDialog from "../components/FormEditDialog";
 import CardItem from "../components/CardItem";
+import SnackbarItem from "../components/SnackbarItem";
 
 const box = css`
   width: 100%;
@@ -41,6 +42,13 @@ const Home: FC = () => {
     phones: [],
   };
 
+  const configurationSnackbar: SnackbarConfigurationType = {
+    isOpen: false,
+    type: "success",
+    duration: 3000,
+    message: "Success",
+  };
+
   const [selectedItem, setSelectedItem] = React.useState<ContactItem>(
     initialObjectContactItem
   );
@@ -48,6 +56,8 @@ const Home: FC = () => {
   const [contactFavorites, setContactFavorites] = React.useState<
     Array<ContactItem>
   >([]);
+  const [snackbarConfiguration, setSnackbarConfiguration] =
+    React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
   React.useEffect(() => {
     const getFavorite = localStorage.getItem("favorites");
@@ -73,6 +83,28 @@ const Home: FC = () => {
     doDeleteContact({ id: item.id });
   };
 
+  const handleSubmitEdit = () => {
+    setCardHTML();
+  };
+
+  const handleUnfavorite = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: true,
+      type: "success",
+      message: "Contact successfully removed from favorite list",
+    }));
+    setCardHTML();
+    window.location.reload();
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: false,
+    }));
+  };
+
   const setCardHTML = () => {
     if (contactFavorites.length === 0) {
       return (
@@ -88,6 +120,7 @@ const Home: FC = () => {
           isFavorite={true}
           onOpenDialog={handleOpenDialog}
           onDelete={handleDelete}
+          onUnfavorite={handleUnfavorite}
         />
       ));
     }
@@ -96,12 +129,6 @@ const Home: FC = () => {
   return (
     <div className={box}>
       <Header title="Home" />
-      <FormEditDialog
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        mode="edit"
-        item={selectedItem}
-      />
       <div>Favorite Contact</div>
       <Grid
         container
@@ -110,6 +137,30 @@ const Home: FC = () => {
       >
         {setCardHTML()}
       </Grid>
+
+      {/* components */}
+      {!isDialogOpen ? (
+        ""
+      ) : (
+        <FormEditDialog
+          isOpen={isDialogOpen}
+          mode="edit"
+          item={selectedItem}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmitEdit}
+        />
+      )}
+
+      {!snackbarConfiguration.isOpen ? (
+        ""
+      ) : (
+        <SnackbarItem
+          isOpen={snackbarConfiguration.isOpen}
+          message={snackbarConfiguration.message}
+          type={snackbarConfiguration.type}
+          onClose={handleCloseSnackbar}
+        />
+      )}
     </div>
   );
 };

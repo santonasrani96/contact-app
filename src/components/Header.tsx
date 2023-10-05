@@ -10,6 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 
 // My Components
 import FormAddDialog from "./FormAddDialog";
+import SnackbarItem from "../components/SnackbarItem";
 
 const titlePage = css`
   font-size: 2rem;
@@ -30,7 +31,16 @@ const headerPage = css`
 `;
 
 const Header: FC<HeaderProp> = (props: HeaderProp) => {
+  const configurationSnackbar: SnackbarConfigurationType = {
+    isOpen: false,
+    type: "success",
+    duration: 3000,
+    message: "Success",
+  };
+
   const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
+  const [snackbarConfiguration, setSnackbarConfiguration] =
+    React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
@@ -38,6 +48,27 @@ const Header: FC<HeaderProp> = (props: HeaderProp) => {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+  };
+
+  const handleSubmit = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: true,
+      type: "success",
+      message: "Contact successfully created",
+    }));
+    handleCloseDialog();
+
+    if (props.onSubmit) {
+      props.onSubmit();
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarConfiguration((state) => ({
+      ...state,
+      isOpen: false,
+    }));
   };
 
   return (
@@ -61,8 +92,20 @@ const Header: FC<HeaderProp> = (props: HeaderProp) => {
       ) : (
         <FormAddDialog
           isOpen={isDialogOpen}
-          onClose={handleCloseDialog}
           mode="add"
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmit}
+        />
+      )}
+
+      {!snackbarConfiguration.isOpen ? (
+        ""
+      ) : (
+        <SnackbarItem
+          isOpen={snackbarConfiguration.isOpen}
+          message={snackbarConfiguration.message}
+          type={snackbarConfiguration.type}
+          onClose={handleCloseSnackbar}
         />
       )}
     </div>

@@ -43,6 +43,9 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
     favorites.push(item);
     localStorage.setItem("favorites", JSON.stringify(favorites));
+    if (props.onFavorite) {
+      props.onFavorite();
+    }
 
     // delete favorite contact from regular list
     // handleDeleteContact(item);
@@ -58,6 +61,9 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
       }
     });
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
+    if (props.onUnfavorite) {
+      props.onUnfavorite();
+    }
 
     // delete favorite contact from regular list
     // handleDeleteContact(item);

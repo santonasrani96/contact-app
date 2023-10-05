@@ -1,6 +1,6 @@
 type HeaderProp = {
   title: string;
-  children?: React.ReactNode;
+  onSubmit?: Function;
 };
 
 type PhoneItem = {
@@ -27,14 +27,39 @@ type FormPhoneNumber = {
 type FormAddDialogProp = {
   isOpen: boolean;
   onClose: Function;
+  onSubmit: Function;
   mode: string;
 };
 
 type FormEditDialogProp = {
   isOpen: boolean;
   onClose: Function;
+  onSubmit: Function;
   mode: string;
   item: ContactItem;
+};
+
+type ConfirmDialogProp = {
+  isOpen: boolean;
+  onClose: Function;
+  message?: string;
+  onYes: Function;
+  onNo: Function;
+};
+
+type SnackbarProp = {
+  isOpen: boolean;
+  onClose: Function;
+  message?: string;
+  type: string;
+  duration?: number;
+};
+
+type SnackbarConfigurationType = {
+  isOpen: boolean;
+  type: string;
+  duration: number;
+  message: string;
 };
 
 type CardItemProp = {
@@ -43,6 +68,8 @@ type CardItemProp = {
   key?: number;
   onOpenDialog: Function;
   onDelete: Function;
+  onFavorite?: Function;
+  onUnfavorite?: Function;
 };
 
 type UseGetContactsProp = {
