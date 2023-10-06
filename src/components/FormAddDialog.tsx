@@ -68,6 +68,18 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
   );
   const [snackbarConfiguration, setSnackbarConfiguration] =
     React.useState<SnackbarConfigurationType>(configurationSnackbar);
+  const [errorInputFirstName, setErrorInputFirstName] =
+    React.useState<boolean>(false);
+  const [errorInputLastName, setErrorInputLastName] =
+    React.useState<boolean>(false);
+  const [errorInputPhoneNumber, setErrorInputPhoneNumber] =
+    React.useState<boolean>(false);
+  const [errorMessageInputFirstName, setErrorMessageInputFirstName] =
+    React.useState<string>("");
+  const [errorMessageInputLastName, setErrorMessageInputLastName] =
+    React.useState<string>("");
+  const [errorMessageInputPhoneNumber, setErrorMessageInputPhoneNumber] =
+    React.useState<string>("");
 
   React.useEffect(() => {
     const phoneValues: Array<PhoneNumber> = [];
@@ -155,7 +167,48 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
+    if (!firstName) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Required");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "First Name is required",
+      }));
+
+      return;
+    }
+
+    if (!lastName) {
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Required");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Last Name is required",
+      }));
+
+      return;
+    }
+
+    if (!inputValuePhoneNumber) {
+      setErrorInputPhoneNumber(true);
+      setErrorMessageInputPhoneNumber("Required");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Phone Number is required",
+      }));
+
+      return;
+    }
+
     if (isFirstNameInvalid && !isLastNameInvalid) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -166,6 +219,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     }
 
     if (!isFirstNameInvalid && isLastNameInvalid) {
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -176,6 +231,10 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     }
 
     if (isFirstNameInvalid && isLastNameInvalid) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Contains special characters");
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -198,10 +257,18 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     }
 
     try {
+      const numberToInsert: PhoneNumber[] = [];
+      phoneNumbers.forEach((phoneNumber: PhoneNumber) => {
+        if (phoneNumber.number) {
+          numberToInsert.push({
+            number: phoneNumber.number,
+          });
+        }
+      });
       await doAddContact({
         first_name: firstName,
         last_name: lastName,
-        phones: phoneNumbers,
+        phones: numberToInsert,
       });
 
       props.onSubmit();
@@ -243,6 +310,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                 <Grid item xs={6}>
                   <span>First Name</span>
                   <TextField
+                    error={errorInputFirstName}
+                    helperText={errorMessageInputFirstName}
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
@@ -253,6 +322,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                 <Grid item xs={6}>
                   <span>Last Name</span>
                   <TextField
+                    error={errorInputLastName}
+                    helperText={errorMessageInputLastName}
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
@@ -272,6 +343,8 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
                 </div>
               </div>
               <TextField
+                error={errorInputPhoneNumber}
+                helperText={errorMessageInputPhoneNumber}
                 id="outlined-basic"
                 fullWidth
                 variant="outlined"

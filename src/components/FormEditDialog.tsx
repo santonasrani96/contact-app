@@ -62,6 +62,18 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   );
   const [snackbarConfiguration, setSnackbarConfiguration] =
     React.useState<SnackbarConfigurationType>(configurationSnackbar);
+  const [errorInputFirstName, setErrorInputFirstName] =
+    React.useState<boolean>(false);
+  const [errorInputLastName, setErrorInputLastName] =
+    React.useState<boolean>(false);
+  const [errorInputPhoneNumber, setErrorInputPhoneNumber] =
+    React.useState<boolean>(false);
+  const [errorMessageInputFirstName, setErrorMessageInputFirstName] =
+    React.useState<string>("");
+  const [errorMessageInputLastName, setErrorMessageInputLastName] =
+    React.useState<string>("");
+  const [errorMessageInputPhoneNumber, setErrorMessageInputPhoneNumber] =
+    React.useState<string>("");
 
   const { data } = useGetContact({
     id: props.item.id,
@@ -191,7 +203,35 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
+    if (!firstName) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Required");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "First Name is required",
+      }));
+
+      return;
+    }
+
+    if (!lastName) {
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Required");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Last Name is required",
+      }));
+
+      return;
+    }
+
     if (isFirstNameInvalid && !isLastNameInvalid) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -202,6 +242,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     }
 
     if (!isFirstNameInvalid && isLastNameInvalid) {
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -212,6 +254,10 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     }
 
     if (isFirstNameInvalid && isLastNameInvalid) {
+      setErrorInputFirstName(true);
+      setErrorMessageInputFirstName("Contains special characters");
+      setErrorInputLastName(true);
+      setErrorMessageInputLastName("Contains special characters");
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
@@ -248,20 +294,22 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
 
         for (const index in oldNumbers) {
           const oldNumber = oldNumbers[index];
-          try {
-            await doEditPhoneNumber({
-              number: oldNumber.number,
-              contact_id: props.item.id,
-              new_phone_number: phoneNumbers[index].number,
-            });
-          } catch (error) {
-            console.log("Failed to update number in contact ", error);
-            setSnackbarConfiguration((state) => ({
-              ...state,
-              isOpen: true,
-              type: "error",
-              message: "Failed to update number in contact",
-            }));
+          if (phoneNumbers[index].number) {
+            try {
+              await doEditPhoneNumber({
+                number: oldNumber.number,
+                contact_id: props.item.id,
+                new_phone_number: phoneNumbers[index].number,
+              });
+            } catch (error) {
+              console.log("Failed to update number in contact ", error);
+              setSnackbarConfiguration((state) => ({
+                ...state,
+                isOpen: true,
+                type: "error",
+                message: "Failed to update number in contact",
+              }));
+            }
           }
         }
       }
@@ -332,6 +380,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                 <Grid item xs={6}>
                   <span>First Name</span>
                   <TextField
+                    error={errorInputFirstName}
+                    helperText={errorMessageInputFirstName}
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
@@ -342,6 +392,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                 <Grid item xs={6}>
                   <span>Last Name</span>
                   <TextField
+                    error={errorInputLastName}
+                    helperText={errorMessageInputLastName}
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
