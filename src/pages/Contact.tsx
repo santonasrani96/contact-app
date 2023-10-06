@@ -102,6 +102,11 @@ const Contact: FC = () => {
     first_name: searchFirstName,
     last_name: searchLastName,
   });
+
+  const { data: contacts, refetch: refetchAllContact } = useGetContacts({
+    limit: 9999999,
+  });
+
   const doDeleteContact = useDeleteContact();
 
   const handleChange = (e: React.ChangeEvent<unknown>, value: number) => {
@@ -111,7 +116,7 @@ const Contact: FC = () => {
       setSearchLastName("%%");
     }
 
-    setOffset(value);
+    setOffset(value - 1);
     setPage(value);
     refetch();
   };
@@ -218,6 +223,17 @@ const Contact: FC = () => {
     refetch();
   };
 
+  const pageCount = (): { _page: number; totalData: number } => {
+    let _page = 0;
+    let totalData = 0;
+    if (!loading && contacts) {
+      refetchAllContact();
+      totalData = contacts.contact.length;
+      _page = Math.ceil(totalData / 10);
+    }
+    return { _page, totalData };
+  };
+
   const handleSubmit = (editType: string) => {
     if (editType === "edit") {
       setSnackbarConfiguration((state) => ({
@@ -295,12 +311,12 @@ const Contact: FC = () => {
           )}
         </Grid>
         {/* pagination */}
-        {!loading && data.contact.length === 0 ? (
-          ""
+        {pageCount().totalData <= 10 ? (
+          <div className={PaginationStyle}></div>
         ) : (
           <Stack spacing={2} className={PaginationStyle}>
             <Pagination
-              count={10}
+              count={pageCount()._page}
               page={page}
               variant="outlined"
               shape="rounded"

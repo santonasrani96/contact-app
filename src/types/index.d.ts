@@ -84,9 +84,9 @@ type InnerLoadingProp = {
 
 type UseGetContactsProp = {
   limit: number;
-  offset: number | null;
-  first_name: string;
-  last_name: string;
+  offset?: number | null;
+  first_name?: string;
+  last_name?: string;
 };
 
 type UseGetContactProp = {
