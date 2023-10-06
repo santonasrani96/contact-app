@@ -2,7 +2,7 @@ import React from "react";
 
 // MaterialUI
 import Snackbar from "@mui/material/Snackbar";
-import MuiAlert, { AlertProps } from "@mui/material/Alert";
+import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 import Slide, { SlideProps } from "@mui/material/Slide";
 
 const SlideTransition = (props: SlideProps) => {
@@ -35,7 +35,11 @@ const SnackbarItem: React.FC<SnackbarProp> = (props: SnackbarProp) => {
       onClose={handleClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
     >
-      <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
+      <Alert
+        onClose={handleClose}
+        severity={props.type as AlertColor}
+        sx={{ width: "100%" }}
+      >
         {props.message ? props.message : "This is a message"}
       </Alert>
     </Snackbar>

@@ -19,6 +19,7 @@ import Stack from "@mui/material/Stack";
 
 // grapQL query hooks
 import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
+import useGetContacts from "../hooks/useGetContacts";
 
 // My components
 import SnackbarItem from "./SnackbarItem";
@@ -124,6 +125,23 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     setInputNewValueListPhoneNumber(inputNumber);
   };
 
+  const { loading, error, data, refetch } = useGetContacts({
+    limit: 10,
+    offset: null,
+    first_name: firstName,
+    last_name: lastName,
+  });
+
+  const checkContactNameExists = (): boolean => {
+    refetch();
+
+    if (!loading && data && data.contact.length > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const handleSubmit = async () => {
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
@@ -142,6 +160,17 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
       alert(
         "First Name and Last Name does not allow to use special characters"
       );
+      return;
+    }
+
+    const isNamesExists: boolean = checkContactNameExists();
+    if (isNamesExists) {
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Contact already exists",
+      }));
       return;
     }
 
