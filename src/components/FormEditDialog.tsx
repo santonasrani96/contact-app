@@ -7,7 +7,6 @@ import { css } from "@emotion/css";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -20,11 +19,22 @@ import useEditPhoneNumber from "../hooks/useEditPhoneNumber";
 
 // My components
 import SnackbarItem from "./SnackbarItem";
+import useGetContacts from "../hooks/useGetContacts";
+import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
 
 const formLabel = css`
   display: flex;
   justify-content: space-between;
   alignitems: "center";
+`;
+
+const dialogTitle = css`
+  background-color: #4267b2;
+  color: white;
+`;
+
+const dialogBody = css`
+  margin: 2rem 0;
 `;
 
 const FormEditDialog: React.FC<FormEditDialogProp> = (
@@ -40,6 +50,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   const [open, setOpen] = React.useState<boolean>(props.isOpen);
   const [firstName, setFirstName] = React.useState<string>("");
   const [lastName, setLastName] = React.useState<string>("");
+  const [oldFirstName, setOldFirstName] = React.useState<string>("");
+  const [oldLastName, setOldLastName] = React.useState<string>("");
   const [inputValueListPhoneNumber, setInputValueListPhoneNumber] =
     React.useState<Array<FormPhoneNumber>>([]);
   const [phoneNumbers, setPhoneNumbers] = React.useState<Array<PhoneNumber>>(
@@ -51,7 +63,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   const [snackbarConfiguration, setSnackbarConfiguration] =
     React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
-  const { loading, error, data } = useGetContact({
+  const { data } = useGetContact({
     id: props.item.id,
   });
 
@@ -71,6 +83,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       setInputValueListPhoneNumber(numbers);
       setFirstName(data.contact_by_pk.first_name);
       setLastName(data.contact_by_pk.last_name);
+      setOldFirstName(data.contact_by_pk.first_name);
+      setOldLastName(data.contact_by_pk.last_name);
     } else {
       props.item.phones.forEach((item: PhoneNumber, index: number) => {
         numbers.push({
@@ -82,6 +96,8 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       setInputValueListPhoneNumber(numbers);
       setFirstName(props.item.first_name);
       setLastName(props.item.last_name);
+      setOldFirstName(props.item.first_name);
+      setOldLastName(props.item.last_name);
     }
 
     console.log("Form Edit Dialog", data);
@@ -102,10 +118,73 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     props.onClose();
   };
 
+  const {
+    loading,
+    data: _data,
+    refetch,
+  } = useGetContacts({
+    limit: 10,
+    offset: null,
+    first_name: firstName,
+    last_name: lastName,
+  });
+
+  const doAddContact = useAddContactWithPhones();
+
   const handleSetInput = (value: string, index: number) => {
     const numbers = [...inputValueListPhoneNumber];
     numbers[index].number = value;
     setInputValueListPhoneNumber(numbers);
+  };
+
+  const checkContactNameExists = (): {
+    isExist: boolean;
+    isNewContact: boolean;
+  } => {
+    let result = { isExist: false, isNewContact: false };
+    if (firstName !== oldFirstName || lastName !== oldLastName) {
+      // ada perubahan
+      refetch();
+
+      if (!loading && _data && _data.contact.length > 0) {
+        // nilai input baru sdh ada di db
+        result.isExist = true;
+      } else {
+        // nilai input baru tidak ada di db, tapi akan buat baru bukan edit
+        doSubmitNewData();
+        result.isExist = true;
+        result.isNewContact = true;
+      }
+    }
+
+    return result;
+  };
+
+  const doSubmitNewData = async () => {
+    try {
+      await doAddContact({
+        first_name: firstName,
+        last_name: lastName,
+        phones: [],
+      });
+
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "success",
+        message: "A new contact successfully added",
+      }));
+
+      props.onSubmit("add");
+    } catch (error) {
+      console.log("Failed to create contact ", error);
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "error",
+        message: "Failed to create contact",
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -113,19 +192,49 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
     if (isFirstNameInvalid && !isLastNameInvalid) {
-      alert("First Name does not allow to use special characters");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "First Name does not allow to use special characters",
+      }));
       return;
     }
 
     if (!isFirstNameInvalid && isLastNameInvalid) {
-      alert("Last Name does not allow to use special characters");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Last Name does not allow to use special characters",
+      }));
       return;
     }
 
     if (isFirstNameInvalid && isLastNameInvalid) {
-      alert(
-        "First Name and Last Name does not allow to use special characters"
-      );
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message:
+          "First Name and Last Name does not allow to use special characters",
+      }));
+      return;
+    }
+
+    const isNamesExists: { isExist: boolean; isNewContact: boolean } =
+      checkContactNameExists();
+    if (isNamesExists.isExist && !isNamesExists.isNewContact) {
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Contact already exists",
+      }));
+      return;
+    }
+
+    if (isNamesExists.isNewContact) {
       return;
     }
 
@@ -158,7 +267,7 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       }
 
       updateContactFavorite();
-      props.onSubmit();
+      props.onSubmit("edit");
     } catch (error) {
       console.log("Failed to update contact ", error);
       setSnackbarConfiguration((state) => ({
@@ -213,55 +322,55 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle id="alert-dialog-title">Edit Contact</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            <Grid container rowSpacing={3}>
-              <Grid item xs={12}>
-                <Grid container columnSpacing={2}>
-                  <Grid item xs={6}>
-                    <span>First Name</span>
-                    <TextField
-                      id="outlined-basic"
-                      fullWidth
-                      variant="outlined"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <span>Last Name</span>
-                    <TextField
-                      id="outlined-basic"
-                      fullWidth
-                      variant="outlined"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-                  </Grid>
+        <DialogTitle id="alert-dialog-title" className={dialogTitle}>
+          Edit Contact
+        </DialogTitle>
+        <DialogContent className={dialogBody}>
+          <Grid container rowSpacing={3}>
+            <Grid item xs={12}>
+              <Grid container columnSpacing={2}>
+                <Grid item xs={6}>
+                  <span>First Name</span>
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    variant="outlined"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <span>Last Name</span>
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    variant="outlined"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </Grid>
               </Grid>
-              <Grid item xs={12}>
-                <div className={formLabel}>
-                  <div>Phone Number</div>
-                </div>
-                {inputValueListPhoneNumber.map((item, index) => (
-                  <>
-                    <TextField
-                      sx={index === 0 ? {} : { marginTop: "1rem" }}
-                      key={index}
-                      id="outlined-basic"
-                      fullWidth
-                      variant="outlined"
-                      placeholder={`Phone Number ${item.id}`}
-                      value={inputValueListPhoneNumber[index].number}
-                      onChange={(e) => handleSetInput(e.target.value, index)}
-                    />
-                  </>
-                ))}
-              </Grid>
             </Grid>
-          </DialogContentText>
+            <Grid item xs={12}>
+              <div className={formLabel}>
+                <div>Phone Number</div>
+              </div>
+              {inputValueListPhoneNumber.map((item, index) => (
+                <>
+                  <TextField
+                    sx={index === 0 ? {} : { marginTop: "1rem" }}
+                    key={index}
+                    id="outlined-basic"
+                    fullWidth
+                    variant="outlined"
+                    placeholder={`Phone Number ${item.id}`}
+                    value={inputValueListPhoneNumber[index].number}
+                    onChange={(e) => handleSetInput(e.target.value, index)}
+                  />
+                </>
+              ))}
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>

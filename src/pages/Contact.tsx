@@ -187,13 +187,22 @@ const Contact: FC = () => {
     refetch();
   };
 
-  const handleSubmit = () => {
-    setSnackbarConfiguration((state) => ({
-      ...state,
-      isOpen: true,
-      type: "success",
-      message: "Contact successfully updated",
-    }));
+  const handleSubmit = (editType: string) => {
+    if (editType === "edit") {
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "success",
+        message: "Contact successfully updated",
+      }));
+    } else {
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "success",
+        message: "A new contact successfully added",
+      }));
+    }
     handleCloseDialog();
     refetch();
   };

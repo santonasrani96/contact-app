@@ -7,7 +7,6 @@ import { css } from "@emotion/css";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -23,6 +22,7 @@ import useGetContacts from "../hooks/useGetContacts";
 
 // My components
 import SnackbarItem from "./SnackbarItem";
+import { containsSpecialCharacters } from "../libraries/validator";
 
 const removeButton = css`
   padding: 1rem 0 0 0;
@@ -34,6 +34,15 @@ const formLabel = css`
   display: flex;
   justify-content: space-between;
   alignitems: "center";
+`;
+
+const dialogTitle = css`
+  background-color: #4267b2;
+  color: white;
+`;
+
+const dialogBody = css`
+  margin: 2rem 0;
 `;
 
 const FormAddDialog: React.FC<FormAddDialogProp> = (
@@ -147,19 +156,33 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
     if (isFirstNameInvalid && !isLastNameInvalid) {
-      alert("First Name does not allow to use special characters");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "First Name does not allow to use special characters",
+      }));
       return;
     }
 
     if (!isFirstNameInvalid && isLastNameInvalid) {
-      alert("Last Name does not allow to use special characters");
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message: "Last Name does not allow to use special characters",
+      }));
       return;
     }
 
     if (isFirstNameInvalid && isLastNameInvalid) {
-      alert(
-        "First Name and Last Name does not allow to use special characters"
-      );
+      setSnackbarConfiguration((state) => ({
+        ...state,
+        isOpen: true,
+        type: "warning",
+        message:
+          "First Name and Last Name does not allow to use special characters",
+      }));
       return;
     }
 
@@ -193,15 +216,6 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
     }
   };
 
-  const containsSpecialCharacters = (value: string) => {
-    const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
-    if (value.match(specialCharacters)) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
   const handleCloseSnackbar = () => {
     setSnackbarConfiguration((state) => ({
       ...state,
@@ -219,76 +233,76 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle id="alert-dialog-title">Add New Contact</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            <Grid container rowSpacing={3}>
-              <Grid item xs={12}>
-                <Grid container columnSpacing={2}>
-                  <Grid item xs={6}>
-                    <span>First Name</span>
-                    <TextField
-                      id="outlined-basic"
-                      fullWidth
-                      variant="outlined"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <span>Last Name</span>
-                    <TextField
-                      id="outlined-basic"
-                      fullWidth
-                      variant="outlined"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-                  </Grid>
+        <DialogTitle id="alert-dialog-title" className={dialogTitle}>
+          Add New Contact
+        </DialogTitle>
+        <DialogContent className={dialogBody}>
+          <Grid container rowSpacing={3}>
+            <Grid item xs={12}>
+              <Grid container columnSpacing={2}>
+                <Grid item xs={6}>
+                  <span>First Name</span>
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    variant="outlined"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <span>Last Name</span>
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    variant="outlined"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </Grid>
               </Grid>
-              <Grid item xs={12}>
-                <div className={formLabel}>
-                  <div>Phone Number</div>
-                  <div>
-                    <IconButton color="primary" onClick={increasePhoneNumber}>
-                      <AddIcon />
-                    </IconButton>
-                  </div>
-                </div>
-                <TextField
-                  id="outlined-basic"
-                  fullWidth
-                  variant="outlined"
-                  value={inputValuePhoneNumber}
-                  onChange={(e) => setInputValuePhoneNumber(e.target.value)}
-                />
-                <Stack direction="column" spacing={1}>
-                  {inputNewValueListPhoneNumber.map((item, index) => (
-                    <>
-                      <div className={removeButton}>
-                        <IconButton
-                          key={index}
-                          color="error"
-                          onClick={() => decreasePhoneNumber(item)}
-                        >
-                          <RemoveIcon />
-                        </IconButton>
-                      </div>
-                      <TextField
-                        key={index}
-                        id="outlined-basic"
-                        fullWidth
-                        variant="outlined"
-                        value={inputNewValueListPhoneNumber[index].number}
-                        onChange={(e) => handleSetInput(e.target.value, index)}
-                      />
-                    </>
-                  ))}
-                </Stack>
-              </Grid>
             </Grid>
-          </DialogContentText>
+            <Grid item xs={12}>
+              <div className={formLabel}>
+                <div>Phone Number</div>
+                <div>
+                  <IconButton color="primary" onClick={increasePhoneNumber}>
+                    <AddIcon />
+                  </IconButton>
+                </div>
+              </div>
+              <TextField
+                id="outlined-basic"
+                fullWidth
+                variant="outlined"
+                value={inputValuePhoneNumber}
+                onChange={(e) => setInputValuePhoneNumber(e.target.value)}
+              />
+              <Stack direction="column" spacing={1}>
+                {inputNewValueListPhoneNumber.map((item, index) => (
+                  <>
+                    <div className={removeButton}>
+                      <IconButton
+                        key={index}
+                        color="error"
+                        onClick={() => decreasePhoneNumber(item)}
+                      >
+                        <RemoveIcon />
+                      </IconButton>
+                    </div>
+                    <TextField
+                      key={index}
+                      id="outlined-basic"
+                      fullWidth
+                      variant="outlined"
+                      value={inputNewValueListPhoneNumber[index].number}
+                      onChange={(e) => handleSetInput(e.target.value, index)}
+                    />
+                  </>
+                ))}
+              </Stack>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
