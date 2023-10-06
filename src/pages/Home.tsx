@@ -59,13 +59,17 @@ const Home: FC = () => {
   const [snackbarConfiguration, setSnackbarConfiguration] =
     React.useState<SnackbarConfigurationType>(configurationSnackbar);
 
-  React.useEffect(() => {
+  const updateContactFavoritesStorage = () => {
     const getFavorite = localStorage.getItem("favorites");
     const favorites = getFavorite ? JSON.parse(getFavorite) : [];
 
     if (favorites.length > 0) {
       setContactFavorites(favorites);
     }
+  };
+
+  React.useEffect(() => {
+    updateContactFavoritesStorage();
   }, []);
 
   const doDeleteContact = useDeleteContact();
@@ -91,8 +95,8 @@ const Home: FC = () => {
       message: "Contact successfully updated",
     }));
     handleCloseDialog();
+    updateContactFavoritesStorage();
     setCardHTML();
-    window.location.reload();
   };
 
   const handleUnfavorite = () => {
@@ -102,8 +106,8 @@ const Home: FC = () => {
       type: "success",
       message: "Contact successfully removed from favorite list",
     }));
+    updateContactFavoritesStorage();
     setCardHTML();
-    window.location.reload();
   };
 
   const handleCloseSnackbar = () => {
@@ -141,7 +145,7 @@ const Home: FC = () => {
       <Grid
         container
         spacing={{ xs: 2, md: 3 }}
-        columns={{ xs: 4, sm: 12, md: 12 }}
+        columns={{ xs: 4, sm: 12, md: 12, lg: 12 }}
       >
         {setCardHTML()}
       </Grid>

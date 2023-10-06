@@ -111,8 +111,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       setOldFirstName(props.item.first_name);
       setOldLastName(props.item.last_name);
     }
-
-    console.log("Form Edit Dialog", data);
   }, [data, props]);
 
   React.useEffect(() => {
@@ -149,57 +147,18 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
     setInputValueListPhoneNumber(numbers);
   };
 
-  const checkContactNameExists = (): {
-    isExist: boolean;
-    isNewContact: boolean;
-  } => {
-    let result = { isExist: false, isNewContact: false };
-    if (firstName !== oldFirstName || lastName !== oldLastName) {
-      // ada perubahan
-      refetch();
+  const checkContactNameExists = (): boolean => {
+    refetch();
 
-      if (!loading && _data && _data.contact.length > 0) {
-        // nilai input baru sdh ada di db
-        result.isExist = true;
-      } else {
-        // nilai input baru tidak ada di db, tapi akan buat baru bukan edit
-        doSubmitNewData();
-        result.isExist = true;
-        result.isNewContact = true;
-      }
-    }
-
-    return result;
-  };
-
-  const doSubmitNewData = async () => {
-    try {
-      await doAddContact({
-        first_name: firstName,
-        last_name: lastName,
-        phones: [],
-      });
-
-      setSnackbarConfiguration((state) => ({
-        ...state,
-        isOpen: true,
-        type: "success",
-        message: "A new contact successfully added",
-      }));
-
-      props.onSubmit("add");
-    } catch (error) {
-      console.log("Failed to create contact ", error);
-      setSnackbarConfiguration((state) => ({
-        ...state,
-        isOpen: true,
-        type: "error",
-        message: "Failed to create contact",
-      }));
+    if (!loading && data && data.contact.length > 0) {
+      return true;
+    } else {
+      return false;
     }
   };
 
   const handleSubmit = async () => {
+    updateContactFavorite();
     const isFirstNameInvalid: boolean = containsSpecialCharacters(firstName);
     const isLastNameInvalid: boolean = containsSpecialCharacters(lastName);
 
@@ -268,19 +227,14 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       return;
     }
 
-    const isNamesExists: { isExist: boolean; isNewContact: boolean } =
-      checkContactNameExists();
-    if (isNamesExists.isExist && !isNamesExists.isNewContact) {
+    const isNamesExists: boolean = checkContactNameExists();
+    if (isNamesExists) {
       setSnackbarConfiguration((state) => ({
         ...state,
         isOpen: true,
         type: "warning",
         message: "Contact already exists",
       }));
-      return;
-    }
-
-    if (isNamesExists.isNewContact) {
       return;
     }
 
@@ -314,7 +268,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
         }
       }
 
-      updateContactFavorite();
       props.onSubmit("edit");
     } catch (error) {
       console.log("Failed to update contact ", error);

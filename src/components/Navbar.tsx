@@ -40,28 +40,61 @@ const Navigation = styled.div({
   justifyContent: "space-between",
   alignItems: "center",
   padding: "1rem 7%",
-  //   position: "fixed",
   top: "0",
   left: "0",
   right: "0",
   zIndex: "99999",
   backgroundColor: "#4267B2",
+
+  "@media (max-width: 850px)": {
+    position: "fixed",
+  },
 });
 
 const Navbar: FC = () => {
+  const [windowWidth, setWindowWidth] = React.useState<number>(
+    window.innerWidth
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <Navigation>
       <span className={navbarLogo}>Contact Apps</span>
 
       <div className={navbarNav}>
         <NavLink to="/" className={nav}>
-          <HomeIcon />
-          &nbsp;Home
+          {windowWidth <= 600 ? (
+            <HomeIcon />
+          ) : (
+            <>
+              <HomeIcon />
+              &nbsp;Home
+            </>
+          )}
         </NavLink>
 
         <NavLink to="/contact" className={nav}>
-          <ContactPhoneIcon />
-          &nbsp;Contact
+          {windowWidth <= 600 ? (
+            <ContactPhoneIcon />
+          ) : (
+            <>
+              <ContactPhoneIcon />
+              &nbsp;Contact
+            </>
+          )}
         </NavLink>
       </div>
 

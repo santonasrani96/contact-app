@@ -85,7 +85,7 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
   };
 
   return (
-    <Grid item xs={2} sm={4} md={3}>
+    <Grid item xs={2} sm={6} md={4} lg={3}>
       <Card
         sx={{
           height: "100%",
@@ -142,9 +142,9 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
           </Typography>
           <Typography variant="body2">
             {props.item.phones.map((phone: PhoneItem, idx: number) => (
-              <div key={idx}>
+              <span key={idx}>
                 #{idx + 1}. {phone.number}
-              </div>
+              </span>
             ))}
           </Typography>
         </CardContent>

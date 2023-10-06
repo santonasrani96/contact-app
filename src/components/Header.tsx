@@ -28,6 +28,10 @@ const headerPage = css`
   display: flex;
   justify-content: space-between;
   alignitems: "center";
+
+  @media (max-width: 600px) {
+    margin-top: 4.8rem;
+  }
 `;
 
 const Header: FC<HeaderProp> = (props: HeaderProp) => {

@@ -99,8 +99,6 @@ const FormAddDialog: React.FC<FormAddDialogProp> = (
         number: item.number,
       }))
     );
-
-    console.log("Form Add Dialog");
   }, [inputNewValueListPhoneNumber, inputValuePhoneNumber]);
 
   const doAddContact = useAddContactWithPhones();

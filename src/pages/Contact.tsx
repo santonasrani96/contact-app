@@ -33,6 +33,19 @@ const box = css`
 const searchInput = css`
   display: flex;
   justify-content: end;
+  margin-right: 1rem;
+
+  @media (max-width: 850px) {
+    width: 100% !important;
+    margin-right: 1rem !important;
+  }
+`;
+
+const maxWidthInputSearch = css`
+  @media (max-width: 850px) {
+    width: 100%;
+    margin-right: 1rem !important;
+  }
 `;
 
 const PaginationStyle = css`
@@ -231,13 +244,13 @@ const Contact: FC = () => {
       <div className={searchInput}>
         <Tooltip title="Hit 'Enter' to search">
           <TextField
+            className={maxWidthInputSearch}
             id="input-with-sx"
             label="Search Contact..."
             variant="outlined"
             value={search}
             onKeyPress={handleKeyPress}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ width: "300px", marginRight: "1rem" }}
           />
         </Tooltip>
       </div>
@@ -245,7 +258,7 @@ const Contact: FC = () => {
         <Grid
           container
           spacing={{ xs: 2, md: 3 }}
-          columns={{ xs: 4, sm: 12, md: 12 }}
+          columns={{ xs: 4, sm: 12, md: 12, lg: 12 }}
         >
           {data.contact.map((item: ContactItem, index: number) => (
             <CardItem
