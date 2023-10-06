@@ -15,6 +15,7 @@ import Header from "../components/Header";
 import FormEditDialog from "../components/FormEditDialog";
 import CardItem from "../components/CardItem";
 import SnackbarItem from "../components/SnackbarItem";
+import FormAddNewNumber from "../components/FormAddNewNumber";
 
 const box = css`
   width: 100%;
@@ -53,6 +54,8 @@ const Home: FC = () => {
     initialObjectContactItem
   );
   const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
+  const [isOpenAddNewNumberFormDialog, setIsOpenAddNewNumberFormDialog] =
+    React.useState<boolean>(false);
   const [contactFavorites, setContactFavorites] = React.useState<
     Array<ContactItem>
   >([]);
@@ -76,11 +79,17 @@ const Home: FC = () => {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    setIsOpenAddNewNumberFormDialog(false);
   };
 
   const handleOpenDialog = (item: ContactItem) => {
     setSelectedItem(item);
     setIsDialogOpen(true);
+  };
+
+  const handleOpenAddNewNumberDialog = (item: ContactItem) => {
+    setSelectedItem(item);
+    setIsOpenAddNewNumberFormDialog(true);
   };
 
   const handleDelete = (item: ContactItem) => {
@@ -131,6 +140,7 @@ const Home: FC = () => {
           item={item}
           isFavorite={true}
           onOpenDialog={handleOpenDialog}
+          onOpenAddNewNumberDialog={handleOpenAddNewNumberDialog}
           onDelete={handleDelete}
           onUnfavorite={handleUnfavorite}
         />
@@ -151,12 +161,21 @@ const Home: FC = () => {
       </Grid>
 
       {/* components */}
+      {!isOpenAddNewNumberFormDialog ? (
+        ""
+      ) : (
+        <FormAddNewNumber
+          isOpen={isOpenAddNewNumberFormDialog}
+          item={selectedItem}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmitEdit}
+        />
+      )}
       {!isDialogOpen ? (
         ""
       ) : (
         <FormEditDialog
           isOpen={isDialogOpen}
-          mode="edit"
           item={selectedItem}
           onClose={handleCloseDialog}
           onSubmit={handleSubmitEdit}

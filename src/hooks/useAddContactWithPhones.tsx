@@ -28,7 +28,7 @@ const ADD_CONTACT_WITH_PHONES = gql`
 const useAddContactWithPhones = () => {
   const [addContact] = useMutation(ADD_CONTACT_WITH_PHONES);
 
-  const doAddContact = (props: UseAddContactWithPhones) => {
+  const doAddContact = (props: UseAddContactWithPhonesProp) => {
     addContact({
       variables: {
         first_name: props.first_name,

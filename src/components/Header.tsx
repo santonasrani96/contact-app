@@ -96,7 +96,6 @@ const Header: FC<HeaderProp> = (props: HeaderProp) => {
       ) : (
         <FormAddDialog
           isOpen={isDialogOpen}
-          mode="add"
           onClose={handleCloseDialog}
           onSubmit={handleSubmit}
         />

@@ -1,4 +1,5 @@
 import React from "react";
+import { containsSpecialCharacters } from "../libraries/validator";
 
 // Emotion
 import { css } from "@emotion/css";
@@ -22,7 +23,6 @@ import useGetContacts from "../hooks/useGetContacts";
 
 // My components
 import SnackbarItem from "./SnackbarItem";
-import { containsSpecialCharacters } from "../libraries/validator";
 
 const removeButton = css`
   padding: 1rem 0 0 0;

@@ -28,14 +28,19 @@ type FormAddDialogProp = {
   isOpen: boolean;
   onClose: Function;
   onSubmit: Function;
-  mode: string;
 };
 
 type FormEditDialogProp = {
   isOpen: boolean;
   onClose: Function;
   onSubmit: Function;
-  mode: string;
+  item: ContactItem;
+};
+
+type FormAddNewNumberProp = {
+  isOpen: boolean;
+  onClose: Function;
+  onSubmit: Function;
   item: ContactItem;
 };
 
@@ -70,6 +75,7 @@ type CardItemProp = {
   onDelete: Function;
   onFavorite?: Function;
   onUnfavorite?: Function;
+  onOpenAddNewNumberDialog?: Function;
 };
 
 type InnerLoadingProp = {
@@ -101,10 +107,15 @@ type UseEditPhoneNumberProp = {
 
 type UseDeleteContactProp = { id: number };
 
-type UseAddContactWithPhones = {
+type UseAddContactWithPhonesProp = {
   first_name: string;
   last_name: string;
   phones: Array<PhoneNumber>;
+};
+
+type UseAddNumberToContactProp = {
+  contact_id: number;
+  phone_number: string;
 };
 
 type HeaderState = {

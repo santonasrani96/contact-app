@@ -1,4 +1,5 @@
 import React from "react";
+import { containsSpecialCharacters } from "../libraries/validator";
 
 // Emotion
 import { css } from "@emotion/css";
@@ -16,11 +17,11 @@ import Grid from "@mui/material/Grid";
 import useGetContact from "../hooks/useGetContact";
 import useEditContact from "../hooks/useEditContact";
 import useEditPhoneNumber from "../hooks/useEditPhoneNumber";
+import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
+import useGetContacts from "../hooks/useGetContacts";
 
 // My components
 import SnackbarItem from "./SnackbarItem";
-import useGetContacts from "../hooks/useGetContacts";
-import useAddContactWithPhones from "../hooks/useAddContactWithPhones";
 
 const formLabel = css`
   display: flex;
@@ -148,13 +149,18 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
   };
 
   const checkContactNameExists = (): boolean => {
-    refetch();
+    let result = false;
+    if (firstName !== oldFirstName || lastName !== oldLastName) {
+      refetch();
 
-    if (!loading && data && data.contact.length > 0) {
-      return true;
-    } else {
-      return false;
+      if (!loading && _data && _data.contact.length > 0) {
+        result = true;
+      } else {
+        result = false;
+      }
     }
+
+    return result;
   };
 
   const handleSubmit = async () => {
@@ -304,15 +310,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
       isOpen: false,
     }));
   };
-
-  const containsSpecialCharacters = (value: string) => {
-    const specialCharacters = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
-    if (value.match(specialCharacters)) {
-      return true;
-    } else {
-      return false;
-    }
-  };
   return (
     <>
       <Dialog
@@ -368,7 +365,6 @@ const FormEditDialog: React.FC<FormEditDialogProp> = (
                     id="outlined-basic"
                     fullWidth
                     variant="outlined"
-                    placeholder={`Phone Number ${item.id}`}
                     value={inputValueListPhoneNumber[index].number}
                     onChange={(e) => handleSetInput(e.target.value, index)}
                   />

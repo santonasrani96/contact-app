@@ -21,10 +21,18 @@ import CardItem from "../components/CardItem";
 import ConfirmDialog from "../components/ConfirmDialog";
 import SnackbarItem from "../components/SnackbarItem";
 import InnerLoading from "../components/InnerLoading";
+import FormAddNewNumber from "../components/FormAddNewNumber";
 
 const isLoading = (value: boolean) => {
   return <InnerLoading isOpen={value} />;
 };
+
+const notFoundLabel = css`
+  margin-top: 4rem;
+  width: 100%;
+  text-align: center;
+  color: grey;
+`;
 
 const box = css`
   width: 100%;
@@ -75,7 +83,10 @@ const Contact: FC = () => {
     initialObjectContactItem
   );
   const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false);
+  const [isOpenAddNewNumberFormDialog, setIsOpenAddNewNumberFormDialog] =
+    React.useState<boolean>(false);
   const [search, setSearch] = React.useState<string>("");
+  const [searchLabel, setSearchLabel] = React.useState<string>("");
   const [searchFirstName, setSearchFirstName] = React.useState<string>("%%");
   const [searchLastName, setSearchLastName] = React.useState<string>("%%");
   const [limit, setLimit] = React.useState<number>(10);
@@ -110,8 +121,14 @@ const Contact: FC = () => {
     setIsDialogOpen(true);
   };
 
+  const handleOpenAddNewNumberDialog = (item: ContactItem) => {
+    setSelectedItem(item);
+    setIsOpenAddNewNumberFormDialog(true);
+  };
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    setIsOpenAddNewNumberFormDialog(false);
   };
 
   const handleDelete = (item: ContactItem) => {
@@ -178,6 +195,7 @@ const Contact: FC = () => {
         }
 
         setOffset(null);
+        setSearchLabel(search);
       }
 
       if (value.length === 1 && value[0] === "") {
@@ -213,7 +231,7 @@ const Contact: FC = () => {
         ...state,
         isOpen: true,
         type: "success",
-        message: "A new contact successfully added",
+        message: "A new number successfully added to contact",
       }));
     }
     handleCloseDialog();
@@ -260,30 +278,49 @@ const Contact: FC = () => {
           spacing={{ xs: 2, md: 3 }}
           columns={{ xs: 4, sm: 12, md: 12, lg: 12 }}
         >
-          {data.contact.map((item: ContactItem, index: number) => (
-            <CardItem
-              key={index}
-              item={item}
-              isFavorite={false}
-              onOpenDialog={handleOpenDialog}
-              onDelete={handleDelete}
-              onFavorite={handleFavorite}
-            />
-          ))}
+          {!loading && data.contact.length === 0 ? (
+            <div className={notFoundLabel}>Data "{searchLabel}" not found</div>
+          ) : (
+            data.contact.map((item: ContactItem, index: number) => (
+              <CardItem
+                key={index}
+                item={item}
+                isFavorite={false}
+                onOpenDialog={handleOpenDialog}
+                onOpenAddNewNumberDialog={handleOpenAddNewNumberDialog}
+                onDelete={handleDelete}
+                onFavorite={handleFavorite}
+              />
+            ))
+          )}
         </Grid>
         {/* pagination */}
-        <Stack spacing={2} className={PaginationStyle}>
-          <Pagination
-            count={10}
-            page={page}
-            variant="outlined"
-            shape="rounded"
-            onChange={handleChange}
-          />
-        </Stack>
+        {!loading && data.contact.length === 0 ? (
+          ""
+        ) : (
+          <Stack spacing={2} className={PaginationStyle}>
+            <Pagination
+              count={10}
+              page={page}
+              variant="outlined"
+              shape="rounded"
+              onChange={handleChange}
+            />
+          </Stack>
+        )}
       </>
 
       {/* components */}
+      {!isOpenAddNewNumberFormDialog ? (
+        ""
+      ) : (
+        <FormAddNewNumber
+          isOpen={isOpenAddNewNumberFormDialog}
+          item={selectedItem}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmit}
+        />
+      )}
       {!snackbarConfiguration.isOpen ? (
         ""
       ) : (
@@ -300,7 +337,6 @@ const Contact: FC = () => {
       ) : (
         <FormEditDialog
           isOpen={isDialogOpen}
-          mode="edit"
           item={selectedItem}
           onClose={handleCloseDialog}
           onSubmit={handleSubmit}

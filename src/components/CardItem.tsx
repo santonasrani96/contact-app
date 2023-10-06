@@ -2,6 +2,7 @@ import React from "react";
 
 // Emotion
 import styled from "@emotion/styled";
+import { css } from "@emotion/css";
 
 // React MaterialUI Components
 import Grid from "@mui/material/Grid";
@@ -14,12 +15,29 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import AddIcon from "@mui/icons-material/Add";
 
 const CardHeader = styled.div({
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
 });
+
+const cardClass = css`
+  position: relative;
+`;
+
+const buttonAddNumber = css`
+  position: absolute;
+  bottom: 5px;
+  text-align: center;
+  width: 100%;
+  font-size: 0.2rem !important;
+`;
+
+const sizeFont = css`
+  font-size: 0.8rem !important;
+`;
 
 // ====== COMPONENT HERE ========
 const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
@@ -49,6 +67,12 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
 
     // delete favorite contact from regular list
     // handleDeleteContact(item);
+  };
+
+  const handleAddNewNumber = (item: ContactItem) => {
+    if (props.onOpenAddNewNumberDialog) {
+      props.onOpenAddNewNumberDialog(item);
+    }
   };
 
   const handleUnfavorite = (item: ContactItem) => {
@@ -87,6 +111,7 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
   return (
     <Grid item xs={2} sm={6} md={4} lg={3}>
       <Card
+        className={cardClass}
         sx={{
           height: "100%",
           margin: "1rem 1rem 1rem 0",
@@ -144,10 +169,21 @@ const CardItem: React.FC<CardItemProp> = (props: CardItemProp) => {
             {props.item.phones.map((phone: PhoneItem, idx: number) => (
               <span key={idx}>
                 #{idx + 1}. {phone.number}
+                <br />
               </span>
             ))}
           </Typography>
         </CardContent>
+        <div className={buttonAddNumber}>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => handleAddNewNumber(props.item)}
+          >
+            <AddIcon fontSize="inherit" />
+            <span className={sizeFont}>Add New Number</span>
+          </IconButton>
+        </div>
       </Card>
     </Grid>
   );
